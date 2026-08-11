@@ -3,10 +3,12 @@ import { env } from 'cloudflare:workers';
 import { findPackageByName, findVersion, incrementDownloadCount } from '../../../../../../../../lib/db';
 import { errorResponse } from '../../../../../../../../lib/http';
 import { getModerationState } from '../../../../../../../../lib/moderation';
+import { bearerToken, verifySessionToken } from '../../../../../../../../lib/session';
+import { recordInstall, TELEMETRY_OPT_OUT_HEADER } from '../../../../../../../../lib/telemetry';
 
 export const prerender = false;
 
-export const GET: APIRoute = async ({ params, locals }) => {
+export const GET: APIRoute = async ({ params, request, locals }) => {
   const name = `${params.owner}/${params.pkg}`;
   const db = env.DB;
   const r2 = env.ARTIFACTS;
@@ -39,6 +41,18 @@ export const GET: APIRoute = async ({ params, locals }) => {
   // design.md "Risks/Trade-offs"). O incremento roda depois da resposta já
   // ter sido enviada.
   locals.cfContext.waitUntil(incrementDownloadCount(db, pkg.id));
+
+  // Telemetria de instalação: só quando autenticado e sem opt-out
+  // (install-telemetry/spec.md). Download anônimo continua funcionando
+  // normalmente (registry-read-api/spec.md), só nunca gera evento.
+  const optedOut = request.headers.has(TELEMETRY_OPT_OUT_HEADER);
+  if (!optedOut) {
+    const token = bearerToken(request);
+    const session = token ? await verifySessionToken(token, env.SESSION_SECRET) : null;
+    if (session) {
+      locals.cfContext.waitUntil(recordInstall(db, pkg.id, session.ownerId));
+    }
+  }
 
   return new Response(object.body, {
     status: 200,

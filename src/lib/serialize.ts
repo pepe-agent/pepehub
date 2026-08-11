@@ -11,6 +11,7 @@ export function serializeSearchItem(row: SearchResultItem) {
     owner: row.owner_handle,
     moderationState: row.moderation_state,
     starsCount: row.stars_count,
+    installsCount: row.installs_count,
   };
 }
 
@@ -20,6 +21,7 @@ export function serializePackage(
   latestVersion: string | null,
   moderationState: ModerationState,
   starsCount: number,
+  installsCount: number,
 ) {
   return {
     name: row.name,
@@ -33,6 +35,7 @@ export function serializePackage(
     updatedAt: row.updated_at,
     moderationState,
     starsCount,
+    installsCount,
   };
 }
 

@@ -5,6 +5,7 @@ import { errorResponse, json } from '../../../../../../lib/http';
 import { getModerationState } from '../../../../../../lib/moderation';
 import { serializePackage } from '../../../../../../lib/serialize';
 import { getStarsCount } from '../../../../../../lib/stars';
+import { getInstallsCount } from '../../../../../../lib/telemetry';
 
 export const prerender = false;
 
@@ -21,6 +22,7 @@ export const GET: APIRoute = async ({ params }) => {
   const latestVersion = await getDistTag(db, pkg.id, 'latest');
   const moderationState = await getModerationState(db, pkg.id);
   const starsCount = await getStarsCount(db, pkg.id);
+  const installsCount = await getInstallsCount(db, pkg.id);
 
-  return json(serializePackage(pkg, owner!.handle, latestVersion, moderationState, starsCount));
+  return json(serializePackage(pkg, owner!.handle, latestVersion, moderationState, starsCount, installsCount));
 };

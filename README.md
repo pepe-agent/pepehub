@@ -140,5 +140,11 @@ steps:
 ```
 
 A audiência precisa ser exatamente `pepehub` (`src/lib/trustedPublisher.ts`
-`OIDC_AUDIENCE`) — é assim que o PepeHub distingue um token emitido pra ele
+`OIDC_AUDIENCE`), é assim que o PepeHub distingue um token emitido pra ele
 de um token pra qualquer outro serviço.
+
+## Telemetria de instalação
+
+Opcional e agregada: só grava um evento numa instalação (`GET .../versions/
+<version>/download`) autenticada e bem-sucedida. Pra desativar, envie o
+header `X-PepeHub-No-Telemetry` (qualquer valor) na chamada de download.

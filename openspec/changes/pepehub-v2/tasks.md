@@ -79,12 +79,18 @@
 
 ## 9. Telemetria de instalação (install-telemetry)
 
-- [ ] 9.1 Migration: tabela `install_events`
-- [ ] 9.2 Gravar o evento só em instalação autenticada, bem-sucedida, sem
-      opt-out
-- [ ] 9.3 Respeitar o cabeçalho de opt-out
-- [ ] 9.4 Expor a contagem agregada na metadata do pacote
-- [ ] 9.5 Testes cobrindo os cenários de `specs/install-telemetry/spec.md`
+- [x] 9.1 Migration: tabela `install_events` (`owner_id` NOT NULL, não
+      nullable como o comentário do design.md sugeria — o spec.md é claro
+      que instalação anônima/opt-out SHALL NOT gravar nenhuma linha, então
+      "null quando anônimo" nunca acontece de verdade; NOT NULL reflete
+      isso e evita uma coluna nullable enganosa)
+- [x] 9.2 Gravar o evento só em instalação autenticada, bem-sucedida, sem
+      opt-out (a "instalação" é o próprio `GET .../versions/<version>/
+      download` — não existe endpoint de install separado)
+- [x] 9.3 Respeitar o cabeçalho de opt-out (`X-PepeHub-No-Telemetry`,
+      convenção própria já que o spec não fixa o nome do header)
+- [x] 9.4 Expor a contagem agregada na metadata do pacote
+- [x] 9.5 Testes cobrindo os cenários de `specs/install-telemetry/spec.md`
 
 ## 10. Administração de plataforma (platform-admin)
 
