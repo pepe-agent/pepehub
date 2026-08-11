@@ -62,7 +62,7 @@
 
 - [x] 7.1 Implementar `source: { repo, ref }` no publish, com clone raso (na
       prática: tarball/zipball da API do GitHub pro `ref` pedido, sem
-      histórico — não tem binário `git` disponível no runtime de Workers)
+      histórico, não tem binário `git` disponível no runtime de Workers)
 - [x] 7.2 Recusar repositório privado, fork, ou arquivado (`422`)
 - [x] 7.3 Testes cobrindo os cenários de `specs/source-publish/spec.md`
 
@@ -80,13 +80,13 @@
 ## 9. Telemetria de instalação (install-telemetry)
 
 - [x] 9.1 Migration: tabela `install_events` (`owner_id` NOT NULL, não
-      nullable como o comentário do design.md sugeria — o spec.md é claro
+      nullable como o comentário do design.md sugeria. O spec.md é claro
       que instalação anônima/opt-out SHALL NOT gravar nenhuma linha, então
       "null quando anônimo" nunca acontece de verdade; NOT NULL reflete
       isso e evita uma coluna nullable enganosa)
 - [x] 9.2 Gravar o evento só em instalação autenticada, bem-sucedida, sem
       opt-out (a "instalação" é o próprio `GET .../versions/<version>/
-      download` — não existe endpoint de install separado)
+      download`, não existe endpoint de install separado)
 - [x] 9.3 Respeitar o cabeçalho de opt-out (`X-PepeHub-No-Telemetry`,
       convenção própria já que o spec não fixa o nome do header)
 - [x] 9.4 Expor a contagem agregada na metadata do pacote
@@ -94,6 +94,11 @@
 
 ## 10. Administração de plataforma (platform-admin)
 
-- [ ] 10.1 Implementar banir/desbanir um publisher, restrito a um operador
-- [ ] 10.2 Implementar a reserva preventiva de um nome
-- [ ] 10.3 Testes cobrindo os cenários de `specs/platform-admin/spec.md`
+- [x] 10.1 Implementar banir/desbanir um publisher, restrito a um operador
+      (`owners.banned_at` + oculta em massa via `package_moderation_state`,
+      marcado com uma razão própria pra desbanir só reverter o que o
+      banimento causou, nunca uma ocultação legítima anterior)
+- [x] 10.2 Implementar a reserva preventiva de um nome (tabela
+      `reserved_names`, com destinatário opcional. Sem destinatário
+      bloqueia todo mundo até um operador liberar)
+- [x] 10.3 Testes cobrindo os cenários de `specs/platform-admin/spec.md`

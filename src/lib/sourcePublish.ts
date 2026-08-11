@@ -14,8 +14,8 @@ function githubHeaders(apiToken: string | undefined): HeadersInit {
   return headers;
 }
 
-// Repositório privado, fork ou arquivado é recusado (source-publish/spec.md)
-// — proveniência de um fork ou repo privado exigiria acesso que o backend
+// Repositório privado, fork ou arquivado é recusado (source-publish/spec.md).
+// Proveniência de um fork ou repo privado exigiria acesso que o backend
 // não deveria ter por padrão (ver design.md).
 export async function checkRepoEligible(repo: string, apiToken: string | undefined): Promise<SourceCheckResult> {
   const res = await fetch(`https://api.github.com/repos/${repo}`, { headers: githubHeaders(apiToken) });
@@ -33,7 +33,7 @@ export async function checkRepoEligible(repo: string, apiToken: string | undefin
 }
 
 // "Clone raso" = baixar o tree do ref pedido via tarball/zipball da API do
-// GitHub, sem histórico — não precisa (e não teria como, no runtime de
+// GitHub, sem histórico. Não precisa (e não teria como, no runtime de
 // Workers) rodar o binário git de verdade.
 export async function fetchArtifactFromRepo(
   repo: string,

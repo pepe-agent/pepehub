@@ -1,6 +1,6 @@
 -- Ciclo de vida de pacote (design.md "Ciclo de vida de pacote").
 -- deleted_at: soft delete, artefatos no R2 nunca são removidos.
--- renamed_from: nome anterior (um hop só, não uma cadeia) — uma consulta por
+-- renamed_from: nome anterior (um hop só, não uma cadeia). Uma consulta por
 -- name = ? OR renamed_from = ? resolve tanto o nome atual quanto o antigo, e
 -- como o nome é sempre "@handle/nome" completo, isso também impede outro
 -- dono de reaproveitar o nome antigo (o handle não bate).

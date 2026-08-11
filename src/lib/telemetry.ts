@@ -1,5 +1,5 @@
 // Convenção própria do PepeHub (install-telemetry/spec.md não fixa um nome
-// de header) — qualquer valor presente desativa o registro do evento.
+// de header). Qualquer valor presente desativa o registro do evento.
 export const TELEMETRY_OPT_OUT_HEADER = 'X-PepeHub-No-Telemetry';
 
 export async function recordInstall(db: D1Database, packageId: number, ownerId: number): Promise<void> {

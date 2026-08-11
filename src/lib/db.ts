@@ -38,7 +38,7 @@ export interface PackageVersionRow {
   requires_json: string | null;
   created_at: string;
   // Varredura mais recente dessa versão (LEFT JOIN correlacionado em
-  // findVersion/listVersions) — null quando ainda não foi enfileirada.
+  // findVersion/listVersions), null quando ainda não foi enfileirada.
   scan_status: ScanStatus | null;
   scan_risk_level: ScanRiskLevel | null;
 }
@@ -87,7 +87,7 @@ export async function findOwnerById(db: D1Database, id: number): Promise<OwnerRo
 }
 
 // name OR renamed_from resolve o nome atual e o nome anterior (um hop),
-// excluindo pacotes apagados — a superfície pública normal nunca deveria
+// excluindo pacotes apagados. A superfície pública normal nunca deveria
 // achar um pacote soft-deleted.
 export async function findPackageByName(db: D1Database, name: string): Promise<PackageRow | null> {
   return db

@@ -86,7 +86,7 @@ describe('renomear', () => {
     expect(byOldNameBody.name).toBe('@rename-owner/nome-novo');
 
     // "reaproveitar o nome antigo" resolve pro MESMO pacote (redirect), nunca
-    // cria uma identidade nova — publicar a mesma versão 1.0.0 de novo sob o
+    // cria uma identidade nova. Publicar a mesma versão 1.0.0 de novo sob o
     // nome antigo bate no pacote renomeado e é rejeitado como duplicata dele.
     const dup = await publish('@rename-owner', 'nome-velho', token);
     expect(dup.status).toBe(409);

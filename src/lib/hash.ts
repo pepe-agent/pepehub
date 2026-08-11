@@ -8,7 +8,7 @@ export async function sha256Hex(data: ArrayBuffer): Promise<string> {
 }
 
 // sha1 é legado (o protocolo do npm ainda espera dist.shasum nesse formato),
-// nunca usado pra integridade de verdade no resto do PepeHub — isso é
+// nunca usado pra integridade de verdade no resto do PepeHub, isso é
 // sha256, tanto no header X-PepeHub-Sha256 quanto no dist.integrity SRI.
 export async function sha1Hex(data: ArrayBuffer): Promise<string> {
   return digestHex('SHA-1', data);

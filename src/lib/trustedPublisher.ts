@@ -4,7 +4,7 @@ const OIDC_ISSUER = 'https://token.actions.githubusercontent.com';
 const OIDC_JWKS_URL = `${OIDC_ISSUER}/.well-known/jwks`;
 
 // Audiência que um workflow do GitHub Actions precisa pedir explicitamente
-// (`core.getIDToken('pepehub')`) pro token servir pra publicar aqui —
+// (`core.getIDToken('pepehub')`) pro token servir pra publicar aqui,
 // convenção própria do PepeHub, documentada pra quem configura o CI.
 export const OIDC_AUDIENCE = 'pepehub';
 
@@ -15,7 +15,7 @@ export interface OidcClaims {
 }
 
 // workflow_ref (ou job_workflow_ref) vem como
-// "owner/repo/.github/workflows/publish.yml@refs/heads/main" — só o nome do
+// "owner/repo/.github/workflows/publish.yml@refs/heads/main". Só o nome do
 // arquivo importa pra comparar com o que foi registrado.
 function extractWorkflowFilename(workflowRef: string): string | null {
   const match = workflowRef.match(/\.github\/workflows\/([^@]+)@/);

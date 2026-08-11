@@ -12,6 +12,7 @@ import {
 import { sha1Hex, sha256Hex } from '../../../../../../lib/hash';
 import { errorResponse, json } from '../../../../../../lib/http';
 import { isManifestError, parseManifest } from '../../../../../../lib/manifest';
+import { getReservedName } from '../../../../../../lib/platformAdmin';
 import { enqueueScan } from '../../../../../../lib/scanning';
 import { bearerToken, verifySessionToken } from '../../../../../../lib/session';
 import { serializeVersion } from '../../../../../../lib/serialize';
@@ -45,7 +46,7 @@ interface PublishIdentity {
 // Duas formas de provar quem está publicando: uma sessão normal (opaque
 // token, dois segmentos) ou um token OIDC do GitHub Actions (JWT, três
 // segmentos) validado contra um publisher confiável já registrado pro
-// pacote (trusted-publisher/spec.md) — por isso OIDC só funciona em cima de
+// pacote (trusted-publisher/spec.md), por isso OIDC só funciona em cima de
 // um pacote que já existe, nunca cria um novo.
 async function resolvePublishIdentity(
   request: Request,
@@ -117,6 +118,15 @@ export const POST: APIRoute = async ({ params, request, locals }) => {
 
   const name = existingPackage?.name ?? `@${identity.handle}/${pkgSlug}`;
 
+  if (!existingPackage) {
+    // Nome reservado por um operador (platform-admin/spec.md) bloqueia
+    // publish de qualquer um que não seja o destinatário da reserva.
+    const reserved = await getReservedName(db, name);
+    if (reserved && reserved.reserved_for_owner_id !== identity.ownerId) {
+      return errorResponse(403, 'name_reserved', `"${name}" está reservado.`);
+    }
+  }
+
   let form: FormData;
   try {
     form = await request.formData();
@@ -180,7 +190,7 @@ export const POST: APIRoute = async ({ params, request, locals }) => {
 
   const sha256 = await sha256Hex(artifactBuffer);
   // sha1 só existe pro packument compatível com npm (npm-compatible-endpoint/
-  // spec.md espera dist.shasum nesse formato legado) — nunca usado como
+  // spec.md espera dist.shasum nesse formato legado). Nunca usado como
   // garantia de integridade de verdade no resto do PepeHub.
   const sha1 = kind === 'plugin' ? await sha1Hex(artifactBuffer) : null;
   const ext = kind === 'plugin' ? 'tgz' : 'zip';
@@ -222,7 +232,7 @@ export const POST: APIRoute = async ({ params, request, locals }) => {
 
   await setDistTag(db, pkg.id, manifest.tag, manifest.version);
 
-  // Fora do caminho crítico (design.md "Varredura de segurança") — o publish
+  // Fora do caminho crítico (design.md "Varredura de segurança"). O publish
   // já respondeu antes da varredura terminar.
   locals.cfContext.waitUntil(enqueueScan(db, version.id, artifactBuffer, env.VIRUSTOTAL_API_KEY));
 

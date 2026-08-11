@@ -6,7 +6,7 @@ export interface RateLimitConfig {
   limit: number;
 }
 
-// Valores batem com wrangler.toml — mantidos aqui só pra montar os headers
+// Valores batem com wrangler.toml, mantidos aqui só pra montar os headers
 // RateLimit-*, já que o binding em si não expõe o limite configurado.
 const RATE_LIMIT_CONFIG: Record<`${RateLimitCategory}:${RateLimitIdentity}`, RateLimitConfig> = {
   'read:anon': { binding: 'RATE_LIMIT_READ_ANON', limit: 600 },

@@ -16,7 +16,7 @@ declare namespace Cloudflare {
     // src/lib/scanning.ts) em vez de bloquear o resto do registro.
     VIRUSTOTAL_API_KEY?: string;
     // Opcional: eleva o rate limit da API do GitHub usado por source-publish
-    // (60/h sem token, 5000/h com um PAT) — ver src/lib/sourcePublish.ts.
+    // (60/h sem token, 5000/h com um PAT). Ver src/lib/sourcePublish.ts.
     GITHUB_API_TOKEN?: string;
   }
 }

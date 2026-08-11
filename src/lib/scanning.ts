@@ -45,7 +45,7 @@ async function sleep(ms: number): Promise<void> {
 // Submete o artefato pro VirusTotal e faz um poll curto (o publish já
 // respondeu antes disso rodar, ver design.md "fora do caminho crítico").
 // Se não completar dentro da janela de poll, fica `pending` (estado tolerado
-// por design, nunca bloqueia instalação) — não é um erro, só falta de tempo.
+// por design, nunca bloqueia instalação). Não é um erro, só falta de tempo.
 export async function scanWithVirusTotal(artifact: ArrayBuffer, apiKey: string): Promise<ScanResult> {
   const form = new FormData();
   form.set('file', new Blob([artifact]));
