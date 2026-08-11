@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { env } from 'cloudflare:workers';
 import { findPackageByName, findVersion, incrementDownloadCount } from '../../../../../../../../lib/db';
 import { errorResponse } from '../../../../../../../../lib/http';
+import { getModerationState } from '../../../../../../../../lib/moderation';
 
 export const prerender = false;
 
@@ -13,6 +14,11 @@ export const GET: APIRoute = async ({ params, locals }) => {
   const pkg = await findPackageByName(db, name);
   if (!pkg) {
     return errorResponse(404, 'not_found', `Pacote "${name}" não encontrado.`);
+  }
+
+  const moderationState = await getModerationState(db, pkg.id);
+  if (moderationState === 'blocked') {
+    return errorResponse(403, 'blocked', 'Esse pacote está bloqueado por moderação.');
   }
 
   const version = await findVersion(db, pkg.id, params.version!);

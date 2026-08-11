@@ -1,4 +1,5 @@
 import type { PackageRow, PackageVersionRow, SearchResultItem } from './db';
+import type { ModerationState } from './moderation';
 
 export function serializeSearchItem(row: SearchResultItem) {
   return {
@@ -8,6 +9,7 @@ export function serializeSearchItem(row: SearchResultItem) {
     summary: row.summary,
     official: Boolean(row.official),
     owner: row.owner_handle,
+    moderationState: row.moderation_state,
   };
 }
 
@@ -15,6 +17,7 @@ export function serializePackage(
   row: PackageRow,
   ownerHandle: string,
   latestVersion: string | null,
+  moderationState: ModerationState,
 ) {
   return {
     name: row.name,
@@ -26,6 +29,7 @@ export function serializePackage(
     latestVersion,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    moderationState,
   };
 }
 

@@ -1,3 +1,4 @@
+import type { ModerationState } from './moderation';
 import type { ScanRiskLevel, ScanStatus } from './scanning';
 
 export interface OwnerRow {
@@ -195,13 +196,20 @@ export interface SearchParams {
 
 export interface SearchResultItem extends PackageRow {
   owner_handle: string;
+  moderation_state: ModerationState;
 }
+
+// hidden some da busca/navegação (moderation/spec.md); held e blocked
+// continuam listados (held mostra aviso, blocked só bloqueia o download).
+const NOT_HIDDEN_CONDITION = "(m.state IS NULL OR m.state != 'hidden')";
+const MODERATION_JOIN = 'LEFT JOIN package_moderation_state m ON m.package_id = p.id';
+const MODERATION_STATE_COLUMN = "COALESCE(m.state, 'visible') AS moderation_state";
 
 export async function searchPackages(
   db: D1Database,
   params: SearchParams,
 ): Promise<{ items: SearchResultItem[]; nextCursor: number | null }> {
-  const conditions: string[] = [];
+  const conditions: string[] = [NOT_HIDDEN_CONDITION];
   const bindings: unknown[] = [];
 
   if (params.q) {
@@ -222,15 +230,16 @@ export async function searchPackages(
     bindings.push(params.cursor);
   }
 
-  const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+  const where = `WHERE ${conditions.join(' AND ')}`;
   const limit = params.limit;
   bindings.push(limit + 1);
 
   const result = await db
     .prepare(
-      `SELECT p.*, o.handle AS owner_handle
+      `SELECT p.*, o.handle AS owner_handle, ${MODERATION_STATE_COLUMN}
        FROM packages p
        JOIN owners o ON o.id = p.owner_id
+       ${MODERATION_JOIN}
        ${where}
        ORDER BY p.id DESC
        LIMIT ?`,
@@ -265,7 +274,7 @@ export interface HomeListParams {
 // porque essa não é a API pública documentada em registry-read-api/spec.md, só
 // consumida pelas próprias páginas Astro renderizadas no servidor.
 export async function listPackagesForHome(db: D1Database, params: HomeListParams): Promise<SearchResultItem[]> {
-  const conditions: string[] = [];
+  const conditions: string[] = [NOT_HIDDEN_CONDITION];
   const bindings: unknown[] = [];
 
   if (params.kind) {
@@ -276,14 +285,15 @@ export async function listPackagesForHome(db: D1Database, params: HomeListParams
     conditions.push('p.category = ?');
     bindings.push(params.category);
   }
-  const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+  const where = `WHERE ${conditions.join(' AND ')}`;
   bindings.push(params.limit);
 
   const result = await db
     .prepare(
-      `SELECT p.*, o.handle AS owner_handle
+      `SELECT p.*, o.handle AS owner_handle, ${MODERATION_STATE_COLUMN}
        FROM packages p
        JOIN owners o ON o.id = p.owner_id
+       ${MODERATION_JOIN}
        ${where}
        ORDER BY ${HOME_SORT_ORDER_BY[params.sort]}
        LIMIT ?`,

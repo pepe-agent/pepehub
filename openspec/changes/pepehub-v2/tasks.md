@@ -23,14 +23,15 @@
 
 ## 3. Moderação (moderation)
 
-- [ ] 3.1 Migration: tabelas `package_reports` e `package_moderation_state`
-- [ ] 3.2 Implementar a denúncia (`POST` autenticado)
-- [ ] 3.3 Implementar a transição de estado de moderação, restrita a um
+- [x] 3.1 Migration: tabelas `package_reports` e `package_moderation_state`
+      (+ `owners.is_operator`, campo que faltava no schema do MVP)
+- [x] 3.2 Implementar a denúncia (`POST` autenticado)
+- [x] 3.3 Implementar a transição de estado de moderação, restrita a um
       operador
-- [ ] 3.4 Aplicar o estado de moderação em toda superfície de leitura
+- [x] 3.4 Aplicar o estado de moderação em toda superfície de leitura
       (busca, navegação, download)
-- [ ] 3.5 Implementar a apelação (dono de um pacote `hidden`/`blocked`)
-- [ ] 3.6 Testes cobrindo os cenários de `specs/moderation/spec.md`
+- [x] 3.5 Implementar a apelação (dono de um pacote `hidden`/`blocked`)
+- [x] 3.6 Testes cobrindo os cenários de `specs/moderation/spec.md`
 
 ## 4. Ciclo de vida de pacote (package-lifecycle)
 

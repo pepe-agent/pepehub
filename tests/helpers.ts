@@ -8,12 +8,12 @@ function randomGithubId(): number {
   return Math.floor(crypto.getRandomValues(new Uint32Array(1))[0] / 2);
 }
 
-export async function sessionTokenFor(handle: string): Promise<string> {
+export async function sessionTokenFor(handle: string, opts: { isOperator?: boolean } = {}): Promise<string> {
   const githubId = randomGithubId();
   const owner = await env.DB.prepare(
-    'INSERT INTO owners (github_id, handle, display_name, created_at) VALUES (?, ?, ?, ?) RETURNING id',
+    'INSERT INTO owners (github_id, handle, display_name, is_operator, created_at) VALUES (?, ?, ?, ?, ?) RETURNING id',
   )
-    .bind(githubId, handle, null, new Date().toISOString())
+    .bind(githubId, handle, null, opts.isOperator ? 1 : 0, new Date().toISOString())
     .first<{ id: number }>();
   return createSessionToken({ ownerId: owner!.id, githubId, handle }, env.SESSION_SECRET);
 }
