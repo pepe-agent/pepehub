@@ -52,11 +52,11 @@
 
 ## 6. Publisher confiável (trusted-publisher)
 
-- [ ] 6.1 Migration: tabela `trusted_publishers`
-- [ ] 6.2 Implementar o registro do publisher confiável, restrito ao dono
-- [ ] 6.3 Implementar a validação do token OIDC do GitHub Actions no publish
-      (biblioteca padrão de verificação de JWT, sem reimplementar)
-- [ ] 6.4 Testes cobrindo os cenários de `specs/trusted-publisher/spec.md`
+- [x] 6.1 Migration: tabela `trusted_publishers`
+- [x] 6.2 Implementar o registro do publisher confiável, restrito ao dono
+- [x] 6.3 Implementar a validação do token OIDC do GitHub Actions no publish
+      (`jose`, sem reimplementar verificação de JWT)
+- [x] 6.4 Testes cobrindo os cenários de `specs/trusted-publisher/spec.md`
 
 ## 7. Publicar de um repositório (source-publish)
 

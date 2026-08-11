@@ -114,3 +114,31 @@ home:
 wrangler d1 execute pepehub --remote \
   --command "UPDATE packages SET featured = 1, updated_at = datetime('now') WHERE name = '@handle/nome';"
 ```
+
+## Varredura de segurança (VirusTotal)
+
+`VIRUSTOTAL_API_KEY` é opcional (`wrangler secret put VIRUSTOTAL_API_KEY`).
+Sem ela, toda varredura termina em `error` de propósito, nunca bloqueia
+publish/install. Crie uma conta e uma API key em virustotal.com.
+
+## Publisher confiável (CI/OIDC do GitHub Actions)
+
+Depois de registrar um publisher confiável
+(`POST /api/v1/packages/<name>/trusted-publisher`, autenticado normalmente),
+um workflow do GitHub Actions publica sem sessão de login humana, só com um
+token OIDC:
+
+```yaml
+permissions:
+  id-token: write
+steps:
+  - id: pepehub-token
+    run: |
+      TOKEN=$(curl -sS -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+        "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=pepehub" | jq -r .value)
+      echo "token=$TOKEN" >> "$GITHUB_OUTPUT"
+```
+
+A audiência precisa ser exatamente `pepehub` (`src/lib/trustedPublisher.ts`
+`OIDC_AUDIENCE`) — é assim que o PepeHub distingue um token emitido pra ele
+de um token pra qualquer outro serviço.

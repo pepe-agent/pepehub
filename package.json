@@ -18,7 +18,8 @@
   },
   "dependencies": {
     "@astrojs/cloudflare": "^14.2.0",
-    "astro": "^7.2.0"
+    "astro": "^7.2.0",
+    "jose": "^6.2.8"
   },
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "^0.21.0",
