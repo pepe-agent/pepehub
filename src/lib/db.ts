@@ -21,6 +21,9 @@ export interface PackageRow {
   featured: number;
   created_at: string;
   updated_at: string;
+  deleted_at: string | null;
+  renamed_from: string | null;
+  transfer_pending_to_owner_id: number | null;
 }
 
 export interface PackageVersionRow {
@@ -78,8 +81,71 @@ export async function findOwnerByHandle(db: D1Database, handle: string): Promise
   return db.prepare('SELECT * FROM owners WHERE handle = ?').bind(handle).first<OwnerRow>();
 }
 
+export async function findOwnerById(db: D1Database, id: number): Promise<OwnerRow | null> {
+  return db.prepare('SELECT * FROM owners WHERE id = ?').bind(id).first<OwnerRow>();
+}
+
+// name OR renamed_from resolve o nome atual e o nome anterior (um hop),
+// excluindo pacotes apagados — a superfície pública normal nunca deveria
+// achar um pacote soft-deleted.
 export async function findPackageByName(db: D1Database, name: string): Promise<PackageRow | null> {
-  return db.prepare('SELECT * FROM packages WHERE name = ?').bind(name).first<PackageRow>();
+  return db
+    .prepare('SELECT * FROM packages WHERE (name = ? OR renamed_from = ?) AND deleted_at IS NULL')
+    .bind(name, name)
+    .first<PackageRow>();
+}
+
+// Usado só pelas rotas de ciclo de vida (restore precisa achar um pacote já
+// apagado; delete/rename/transfer conferem deleted_at por conta própria).
+export async function findPackageByNameIncludingDeleted(db: D1Database, name: string): Promise<PackageRow | null> {
+  return db.prepare('SELECT * FROM packages WHERE name = ? OR renamed_from = ?').bind(name, name).first<PackageRow>();
+}
+
+export async function softDeletePackage(db: D1Database, packageId: number): Promise<void> {
+  await db
+    .prepare("UPDATE packages SET deleted_at = ?, updated_at = ? WHERE id = ?")
+    .bind(now(), now(), packageId)
+    .run();
+}
+
+export async function restorePackage(db: D1Database, packageId: number): Promise<void> {
+  await db
+    .prepare('UPDATE packages SET deleted_at = NULL, updated_at = ? WHERE id = ?')
+    .bind(now(), packageId)
+    .run();
+}
+
+export async function renamePackage(db: D1Database, packageId: number, newName: string, oldName: string): Promise<void> {
+  await db
+    .prepare('UPDATE packages SET name = ?, renamed_from = ?, updated_at = ? WHERE id = ?')
+    .bind(newName, oldName, now(), packageId)
+    .run();
+}
+
+export async function requestOwnerTransfer(db: D1Database, packageId: number, toOwnerId: number): Promise<void> {
+  await db
+    .prepare('UPDATE packages SET transfer_pending_to_owner_id = ?, updated_at = ? WHERE id = ?')
+    .bind(toOwnerId, now(), packageId)
+    .run();
+}
+
+// O nome muda junto (não só owner_id): package-lifecycle/spec.md exige que o
+// namespace "@handle/nome" passe a exigir o handle do novo dono em
+// publicações futuras, e o nome já é sempre "@handle/nome" completo.
+export async function acceptOwnerTransfer(
+  db: D1Database,
+  packageId: number,
+  newOwnerId: number,
+  newName: string,
+  oldName: string,
+): Promise<void> {
+  await db
+    .prepare(
+      `UPDATE packages SET owner_id = ?, name = ?, renamed_from = ?, transfer_pending_to_owner_id = NULL, updated_at = ?
+       WHERE id = ?`,
+    )
+    .bind(newOwnerId, newName, oldName, now(), packageId)
+    .run();
 }
 
 export async function createPackage(
@@ -201,7 +267,8 @@ export interface SearchResultItem extends PackageRow {
 
 // hidden some da busca/navegação (moderation/spec.md); held e blocked
 // continuam listados (held mostra aviso, blocked só bloqueia o download).
-const NOT_HIDDEN_CONDITION = "(m.state IS NULL OR m.state != 'hidden')";
+// Pacote apagado (soft delete, package-lifecycle/spec.md) some junto.
+const NOT_HIDDEN_CONDITION = "(m.state IS NULL OR m.state != 'hidden') AND p.deleted_at IS NULL";
 const MODERATION_JOIN = 'LEFT JOIN package_moderation_state m ON m.package_id = p.id';
 const MODERATION_STATE_COLUMN = "COALESCE(m.state, 'visible') AS moderation_state";
 

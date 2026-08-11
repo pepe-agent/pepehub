@@ -35,11 +35,13 @@
 
 ## 4. Ciclo de vida de pacote (package-lifecycle)
 
-- [ ] 4.1 Migration: colunas `deleted_at` e `renamed_from` em `packages`
-- [ ] 4.2 Implementar apagar/restaurar (soft delete)
-- [ ] 4.3 Implementar renomear com redirecionamento do nome antigo
-- [ ] 4.4 Implementar a solicitação e o aceite de transferência de dono
-- [ ] 4.5 Testes cobrindo os cenários de `specs/package-lifecycle/spec.md`
+- [x] 4.1 Migration: colunas `deleted_at` e `renamed_from` em `packages` (+
+      `transfer_pending_to_owner_id`, necessária pro handshake de
+      transferência da task 4.4, não prevista à parte no design.md)
+- [x] 4.2 Implementar apagar/restaurar (soft delete)
+- [x] 4.3 Implementar renomear com redirecionamento do nome antigo
+- [x] 4.4 Implementar a solicitação e o aceite de transferência de dono
+- [x] 4.5 Testes cobrindo os cenários de `specs/package-lifecycle/spec.md`
 
 ## 5. Favoritos (package-stars)
 

@@ -76,6 +76,12 @@ export const POST: APIRoute = async ({ params, request, locals }) => {
   const kind = existingPackage?.kind ?? manifest.kind;
 
   if (existingPackage) {
+    // O nome pode ter resolvido via renamed_from (redirect de rename ou de
+    // transferência de dono aceita) pra um pacote cujo dono real já não é
+    // mais quem está chamando — a checagem de URL sozinha não pega isso.
+    if (existingPackage.owner_id !== session.ownerId) {
+      return errorResponse(403, 'namespace_mismatch', `Você não pode publicar em "${ownerParam}".`);
+    }
     const existingVersion = await findVersion(db, existingPackage.id, manifest.version);
     if (existingVersion) {
       return errorResponse(409, 'version_exists', `Versão ${manifest.version} já publicada.`);
