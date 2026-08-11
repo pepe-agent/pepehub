@@ -68,11 +68,14 @@
 
 ## 8. Endpoint compatível com npm (npm-compatible-endpoint)
 
-- [ ] 8.1 Implementar `GET /api/npm/<name>` (packument), só pra `kind = plugin`
-- [ ] 8.2 Garantir que `dist.tarball`/`dist.integrity`/`dist.shasum` batem
+- [x] 8.1 Implementar `GET /api/npm/<name>` (packument), só pra `kind = plugin`
+- [x] 8.2 Garantir que `dist.tarball`/`dist.integrity`/`dist.shasum` batem
       com o artefato já servido por `GET /api/v1/packages/<name>/versions/
-      <version>/download`
-- [ ] 8.3 Testes cobrindo os cenários de `specs/npm-compatible-endpoint/spec.md`
+      <version>/download` (`dist.tarball` aponta pro mesmo endpoint de
+      download; `dist.integrity` é sha256 real via SRI; `dist.shasum` é sha1,
+      calculado no publish só pra plugins, nunca usado como garantia de
+      integridade real no resto do PepeHub)
+- [x] 8.3 Testes cobrindo os cenários de `specs/npm-compatible-endpoint/spec.md`
 
 ## 9. Telemetria de instalação (install-telemetry)
 

@@ -31,6 +31,7 @@ export interface PackageVersionRow {
   package_id: number;
   version: string;
   sha256: string;
+  sha1: string | null;
   size_bytes: number;
   r2_key: string;
   changelog: string | null;
@@ -204,6 +205,7 @@ export async function insertVersion(
     packageId: number;
     version: string;
     sha256: string;
+    sha1: string | null;
     sizeBytes: number;
     r2Key: string;
     changelog: string | null;
@@ -212,13 +214,14 @@ export async function insertVersion(
 ): Promise<PackageVersionRow> {
   const result = await db
     .prepare(
-      `INSERT INTO package_versions (package_id, version, sha256, size_bytes, r2_key, changelog, requires_json, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING *`,
+      `INSERT INTO package_versions (package_id, version, sha256, sha1, size_bytes, r2_key, changelog, requires_json, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *`,
     )
     .bind(
       params.packageId,
       params.version,
       params.sha256,
+      params.sha1,
       params.sizeBytes,
       params.r2Key,
       params.changelog,

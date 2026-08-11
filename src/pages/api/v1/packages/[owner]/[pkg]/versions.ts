@@ -9,7 +9,7 @@ import {
   listVersions,
   setDistTag,
 } from '../../../../../../lib/db';
-import { sha256Hex } from '../../../../../../lib/hash';
+import { sha1Hex, sha256Hex } from '../../../../../../lib/hash';
 import { errorResponse, json } from '../../../../../../lib/http';
 import { isManifestError, parseManifest } from '../../../../../../lib/manifest';
 import { enqueueScan } from '../../../../../../lib/scanning';
@@ -179,6 +179,10 @@ export const POST: APIRoute = async ({ params, request, locals }) => {
   }
 
   const sha256 = await sha256Hex(artifactBuffer);
+  // sha1 só existe pro packument compatível com npm (npm-compatible-endpoint/
+  // spec.md espera dist.shasum nesse formato legado) — nunca usado como
+  // garantia de integridade de verdade no resto do PepeHub.
+  const sha1 = kind === 'plugin' ? await sha1Hex(artifactBuffer) : null;
   const ext = kind === 'plugin' ? 'tgz' : 'zip';
   const r2Key = `packages/${identity.handle}/${pkgSlug}/${manifest.version}.${ext}`;
 
@@ -202,6 +206,7 @@ export const POST: APIRoute = async ({ params, request, locals }) => {
       packageId: pkg.id,
       version: manifest.version,
       sha256,
+      sha1,
       sizeBytes: artifactBuffer.byteLength,
       r2Key,
       changelog: manifest.changelog,
