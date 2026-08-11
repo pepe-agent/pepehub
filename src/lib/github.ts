@@ -70,6 +70,42 @@ export async function pollDeviceFlow(
   }
 }
 
+export function buildAuthorizeUrl(clientId: string, redirectUri: string, state: string): string {
+  const url = new URL('https://github.com/login/oauth/authorize');
+  url.searchParams.set('client_id', clientId);
+  url.searchParams.set('redirect_uri', redirectUri);
+  url.searchParams.set('scope', 'read:user');
+  url.searchParams.set('state', state);
+  return url.toString();
+}
+
+export async function exchangeCodeForAccessToken(
+  clientId: string,
+  clientSecret: string,
+  code: string,
+  redirectUri: string,
+): Promise<string> {
+  const response = await fetch('https://github.com/login/oauth/access_token', {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      'User-Agent': 'pepehub',
+    },
+    body: JSON.stringify({
+      client_id: clientId,
+      client_secret: clientSecret,
+      code,
+      redirect_uri: redirectUri,
+    }),
+  });
+  const data = (await response.json()) as { access_token?: string; error?: string };
+  if (!data.access_token) {
+    throw new Error(`GitHub access_token respondeu erro: ${data.error ?? response.status}`);
+  }
+  return data.access_token;
+}
+
 export interface GithubUser {
   id: number;
   login: string;

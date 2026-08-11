@@ -3,7 +3,7 @@ import { onRequest } from '../src/middleware';
 import { sessionTokenFor } from './helpers';
 
 function ctx(url: string, init?: RequestInit) {
-  return { request: new Request(url, init) } as any;
+  return { request: new Request(url, init), locals: {} } as any;
 }
 
 function okNext() {

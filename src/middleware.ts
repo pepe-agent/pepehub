@@ -1,15 +1,22 @@
 import type { MiddlewareHandler } from 'astro';
 import { env } from 'cloudflare:workers';
 import { categoryForMethod, rateLimitConfigFor, rateLimitHeaders } from './lib/rateLimit';
-import { bearerToken, verifySessionToken } from './lib/session';
+import { SESSION_COOKIE_NAME, bearerToken, readCookie, verifySessionToken } from './lib/session';
 
 export const onRequest: MiddlewareHandler = async (context, next) => {
-  const { request } = context;
+  const { request, locals } = context;
   const url = new URL(request.url);
   if (!url.pathname.startsWith('/api/v1/')) {
+    // Sessão via cookie é só pra renderizar estado de login nas páginas
+    // (Base.astro). API continua exigindo Bearer explícito, nunca cookie
+    // ambiente, pra não abrir CSRF nos endpoints de mutação (checkOrigin
+    // está desligado pro resto do site).
+    const cookieToken = readCookie(request, SESSION_COOKIE_NAME);
+    locals.session = cookieToken ? await verifySessionToken(cookieToken, env.SESSION_SECRET) : null;
     return next();
   }
 
+  locals.session = null;
   const token = bearerToken(request);
   const session = token ? await verifySessionToken(token, env.SESSION_SECRET) : null;
 

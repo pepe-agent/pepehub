@@ -1,5 +1,8 @@
 const SESSION_TTL_SECONDS = 90 * 24 * 60 * 60; // 90 dias
 
+export const SESSION_COOKIE_NAME = 'pepehub_session';
+export const OAUTH_STATE_COOKIE_NAME = 'pepehub_oauth_state';
+
 export interface SessionPayload {
   ownerId: number;
   githubId: number;
@@ -68,6 +71,29 @@ export async function verifySessionToken(
   } catch {
     return null;
   }
+}
+
+export function cookieHeader(name: string, value: string, maxAgeSeconds: number): string {
+  return `${name}=${value}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAgeSeconds}`;
+}
+
+export function sessionCookie(token: string): string {
+  return cookieHeader(SESSION_COOKIE_NAME, token, SESSION_TTL_SECONDS);
+}
+
+export function clearCookie(name: string): string {
+  return cookieHeader(name, '', 0);
+}
+
+export function readCookie(request: Request, name: string): string | null {
+  const header = request.headers.get('Cookie');
+  if (!header) return null;
+  for (const part of header.split(';')) {
+    const separator = part.indexOf('=');
+    if (separator === -1) continue;
+    if (part.slice(0, separator).trim() === name) return part.slice(separator + 1).trim();
+  }
+  return null;
 }
 
 export function bearerToken(request: Request): string | null {

@@ -20,3 +20,12 @@ declare namespace Cloudflare {
     GITHUB_API_TOKEN?: string;
   }
 }
+
+declare namespace App {
+  interface Locals {
+    // Sessão do navegador via cookie, resolvida em src/middleware.ts. Só pra
+    // exibir estado de login nas páginas; endpoints /api/v1/* continuam
+    // exigindo Bearer token, nunca cookie.
+    session: import('./lib/session').SessionPayload | null;
+  }
+}

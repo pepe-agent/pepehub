@@ -5,6 +5,7 @@ interface Props {
   title: string;
 }
 const { title } = Astro.props;
+const session = Astro.locals.session;
 ---
 
 <html lang="pt-BR">
@@ -77,6 +78,19 @@ const { title } = Astro.props;
       .nav-links a:hover {
         color: var(--text);
       }
+      .auth {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .auth-handle {
+        color: var(--dim);
+        font-size: 14px;
+      }
+      .auth-login {
+        color: var(--accent-soft);
+        font-weight: 600;
+      }
       main {
         max-width: var(--maxw);
         margin: 0 auto;
@@ -99,6 +113,14 @@ const { title } = Astro.props;
           <a href="/?kind=plugin">Plugins</a>
           <a href="/?sort=official">Official</a>
           <a href="/publish">Docs</a>
+          {session ? (
+            <span class="auth">
+              <span class="auth-handle">@{session.handle}</span>
+              <a href="/logout">Sair</a>
+            </span>
+          ) : (
+            <a class="auth-login" href="/login">Entrar com GitHub</a>
+          )}
         </nav>
       </div>
     </header>
