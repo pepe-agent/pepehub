@@ -1,4 +1,9 @@
-## ADDED Requirements
+## Purpose
+
+Flag `official` curada manualmente, exposta na API e no site do PepeHub, pra
+sinalizar pacotes/skills mantidos oficialmente.
+
+## Requirements
 
 ### Requirement: Flag "oficial" é exposta na API e no site
 O sistema SHALL expor se um pacote é oficial em toda resposta de metadata da API
@@ -16,7 +21,7 @@ e em toda página que o exiba.
 
 ### Requirement: Curadoria de "oficial" é manual na v1
 O sistema SHALL NOT expor, na v1, nenhum endpoint público que permita marcar um
-pacote como oficial — apenas um operador com acesso direto ao D1 pode alterar
+pacote como oficial. Apenas um operador com acesso direto ao D1 pode alterar
 essa flag.
 
 #### Scenario: Tentativa de marcar como oficial por uma rota pública

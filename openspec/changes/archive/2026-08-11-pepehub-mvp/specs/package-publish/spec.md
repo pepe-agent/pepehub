@@ -49,7 +49,7 @@ versão.
 ### Requirement: Manifesto pode declarar requisitos de ambiente
 O sistema SHALL aceitar um campo opcional `requires` no manifesto (`env`: lista
 de variáveis de ambiente, `bins`: lista de binários), gravando-o junto da
-versão sem validar se os valores existem ou fazem sentido — a checagem é
+versão sem validar se os valores existem ou fazem sentido. A checagem é
 responsabilidade de quem instala, não do PepeHub.
 
 #### Scenario: Manifesto com requires

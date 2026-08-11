@@ -1,8 +1,13 @@
-## ADDED Requirements
+## Purpose
+
+Lista fixa e curada de categorias pra pacotes/skills do PepeHub, atribuída no
+publish e usada pra filtrar/agrupar a busca e a navegação do site.
+
+## Requirements
 
 ### Requirement: Categoria é escolhida de uma lista fixa e curada
 O sistema SHALL exigir que todo pacote/skill publicado declare exatamente uma
-categoria, escolhida de uma lista fixa mantida pelo PepeHub — nunca uma tag
+categoria, escolhida de uma lista fixa mantida pelo PepeHub, nunca uma tag
 livre digitada por quem publica.
 
 #### Scenario: Publish com categoria válida

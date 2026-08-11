@@ -1,4 +1,9 @@
-## ADDED Requirements
+## Purpose
+
+Site em Astro pra navegar, buscar e ver o detalhe de um pacote/skill publicado
+no PepeHub.
+
+## Requirements
 
 ### Requirement: Página inicial mostra pacotes e skills
 O sistema SHALL exibir na página inicial abas separadas pra Skills e Plugins, com
@@ -48,7 +53,7 @@ pública.
 
 ### Requirement: Página de "como publicar"
 O sistema SHALL oferecer uma página estática explicando como publicar um pacote
-ou skill no PepeHub — login, formato aceito e o comando de publish — sem
+ou skill no PepeHub (login, formato aceito e o comando de publish), sem
 duplicar a documentação do formato do manifesto, que continua no site do Pepe.
 
 #### Scenario: Acessar a página de publicação
