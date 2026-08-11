@@ -11,3 +11,35 @@ migrations_dir = "migrations"
 [[r2_buckets]]
 binding = "ARTIFACTS"
 bucket_name = "pepehub-artifacts" # created by `wrangler r2 bucket create pepehub-artifacts` (task 2.4)
+
+# Rate limiting nativo (design.md "Limite de taxa"). period=60 é o único valor
+# que cobre um limite "por minuto"; a API só aceita 10 ou 60. Um binding por
+# categoria x identidade porque o limit/period de cada um é fixo na config,
+# não dinâmico por chamada.
+[[ratelimits]]
+name = "RATE_LIMIT_READ_ANON"
+namespace_id = "1001"
+[ratelimits.simple]
+limit = 600
+period = 60
+
+[[ratelimits]]
+name = "RATE_LIMIT_READ_AUTH"
+namespace_id = "1002"
+[ratelimits.simple]
+limit = 3000
+period = 60
+
+[[ratelimits]]
+name = "RATE_LIMIT_WRITE_ANON"
+namespace_id = "1003"
+[ratelimits.simple]
+limit = 60
+period = 60
+
+[[ratelimits]]
+name = "RATE_LIMIT_WRITE_AUTH"
+namespace_id = "1004"
+[ratelimits.simple]
+limit = 600
+period = 60

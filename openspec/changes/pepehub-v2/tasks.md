@@ -1,10 +1,10 @@
 ## 1. Limite de taxa (rate-limiting)
 
-- [ ] 1.1 Configurar o Rate Limiting nativo da Cloudflare (binding no
+- [x] 1.1 Configurar o Rate Limiting nativo da Cloudflare (binding no
       `wrangler.toml`) com as categorias leitura/escrita, anônimo/autenticado
-- [ ] 1.2 Adicionar os headers `RateLimit-Limit`/`RateLimit-Remaining`/
+- [x] 1.2 Adicionar os headers `RateLimit-Limit`/`RateLimit-Remaining`/
       `RateLimit-Reset` em toda resposta e `Retry-After` no `429`
-- [ ] 1.3 Testes cobrindo os cenários de `specs/rate-limiting/spec.md`
+- [x] 1.3 Testes cobrindo os cenários de `specs/rate-limiting/spec.md`
 
 ## 2. Varredura de segurança (artifact-scanning)
 

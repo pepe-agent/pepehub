@@ -10,7 +10,7 @@ e as operações de manutenção que todo pacote público eventualmente precisa
 
 Esse change foi desenhado depois de uma varredura completa e deliberada de
 como um concorrente direto (mesmo tipo de produto: marketplace de skills e
-plugins de agente) resolve exatamente esses mesmos problemas — não pra copiar
+plugins de agente) resolve exatamente esses mesmos problemas, não pra copiar
 a marca ou os nomes deles, mas pra não reinventar o formato de decisões que
 outro time público já validou (SLA de rate limit por tipo de operação, eixo de
 "risco" separado do veredito de segurança, ciclo de vida de moderação com
@@ -68,20 +68,20 @@ apelação, etc.).
   preventivamente.
 
 ### Modified Capabilities
-(nenhuma — este change não altera nenhum requisito do `pepehub-mvp`; tudo
+(nenhuma: este change não altera nenhum requisito do `pepehub-mvp`; tudo
 aqui é aditivo e não toca nos arquivos daquele change, que ainda está em
 implementação)
 
 ## Impact
 
 - **Depende do `pepehub-mvp` já existir** (schema D1 de `packages`/
-  `package_versions`/`owners`, o bucket R2, a autenticação via GitHub) — este
+  `package_versions`/`owners`, o bucket R2, a autenticação via GitHub). Este
   change assume essas peças como dadas, não as recria.
 - **Nova dependência externa opcional**: um serviço de terceiros pra
-  reputação de arquivo (ex.: VirusTotal, que tem API pública) — se
+  reputação de arquivo (ex.: VirusTotal, que tem API pública). Se
   indisponível, a varredura fica `pending`/`error`, nunca bloqueia o resto do
   registro de funcionar.
 - **Fora deste change**: um motor de análise estática próprio (equivalente a
-  construir um scanner de segurança do zero) — não é non-goal permanente,
+  construir um scanner de segurança do zero). Não é non-goal permanente,
   mas está fora do que faz sentido construir agora; integrar com um serviço
   existente resolve o mesmo problema com uma fração do esforço.

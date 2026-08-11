@@ -10,7 +10,11 @@ autenticada).
   dentro do limite da sua categoria
 - **THEN** o sistema SHALL responder normalmente
 - **AND** a resposta SHALL incluir os headers `RateLimit-Limit`,
-  `RateLimit-Remaining`, `RateLimit-Reset`
+  `RateLimit-Remaining`, `RateLimit-Reset` (o binding nativo de rate limit da
+  Cloudflare só expõe sucesso/falha, sem contagem exata; `RateLimit-Limit` é
+  exato, `RateLimit-Remaining` é `0` ou o limite cheio, e `RateLimit-Reset` é
+  o início da próxima janela de 60s por relógio de parede, não o reset exato
+  daquela chave)
 
 #### Scenario: Chamada além do limite
 - **WHEN** um cliente excede o limite da sua categoria e identidade

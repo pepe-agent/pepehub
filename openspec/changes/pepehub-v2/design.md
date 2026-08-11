@@ -2,14 +2,14 @@
 
 Este change constrói sobre o schema e a infra que o `pepehub-mvp` já define
 (`owners`, `packages`, `package_versions`, `dist_tags`, o bucket R2, a sessão
-via GitHub Device Flow) — não recria nada disso, só adiciona tabelas e rotas
+via GitHub Device Flow), não recria nada disso, só adiciona tabelas e rotas
 novas. O `pepehub-mvp` ainda está em implementação; este change não edita
 nenhum arquivo dele, só assume que essas peças existirão.
 
 O desenho abaixo foi calibrado depois de uma varredura completa de como um
 concorrente direto resolve os mesmos problemas (limite de taxa, varredura de
 segurança, moderação, ciclo de vida de pacote, publisher confiável via CI,
-compatibilidade com npm) — a forma das decisões é comparável de propósito
+compatibilidade com npm): a forma das decisões é comparável de propósito
 (não faz sentido reinventar o que já foi validado publicamente), mas nomes,
 tokens, motores de varredura e a marca são todos originais deste projeto.
 
@@ -26,9 +26,9 @@ tokens, motores de varredura e a marca são todos originais deste projeto.
   (apagar, renomear, transferir) sem perder o histórico de versões.
 
 **Non-Goals:**
-- Construir um motor de análise estática/malware próprio — v2 integra com um
+- Construir um motor de análise estática/malware próprio: v2 integra com um
   serviço de terceiros existente.
-- Um sistema de moderação com aprendizado de máquina próprio — a fila de
+- Um sistema de moderação com aprendizado de máquina próprio: a fila de
   moderação nesta v2 é revisão humana, com a varredura automática como sinal
   de entrada, não decisão final.
 - Suporte a outro provedor de OAuth além do GitHub (mantém a decisão do MVP).
@@ -50,9 +50,19 @@ denúncia, favoritar, etc.):
 Headers de resposta: `RateLimit-Limit`, `RateLimit-Remaining`,
 `RateLimit-Reset`, e `Retry-After` no `429`. Implementado com o Rate
 Limiting nativo da Cloudflare (binding no `wrangler.toml`), não uma tabela
-D1 - contar limite de taxa em D1 seria escrita síncrona em todo request, o
+D1. Contar limite de taxa em D1 seria escrita síncrona em todo request, o
 que o design do `pepehub-mvp` já evita deliberadamente pra contagem de
 download.
+
+O binding nativo (`env.BINDING.limit({key})`) só retorna `{ success }`, sem
+contagem restante nem horário de reset exato por chave. `RateLimit-Limit` é
+sempre exato (valor fixo por categoria/identidade); `RateLimit-Remaining` é
+aproximado (`0` quando bloqueado, o limite cheio quando não); `RateLimit-Reset`
+é sempre o início da próxima janela de 60s por relógio de parede, não o reset
+exato daquela chave. Um contador próprio (KV/Durable Object) daria precisão
+real, mas fica fora do que faz sentido construir agora só pra esses três
+headers, dado que o binding nativo já resolve o objetivo real do rate limit
+(proteger o serviço).
 
 ### Varredura de segurança (`artifact-scanning`)
 
