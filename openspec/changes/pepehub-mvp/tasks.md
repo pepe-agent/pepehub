@@ -7,7 +7,7 @@
       `.gitignore`
 - [x] 1.4 Criar `wrangler.toml` com os bindings de D1 e R2 (placeholders de
       `database_id`/`bucket_name` até a task 2)
-- [ ] 1.5 Criar o GitHub OAuth App (com Device Flow habilitado) e documentar no
+- [x] 1.5 Criar o GitHub OAuth App (com Device Flow habilitado) e documentar no
       README como preencher o `.env` local a partir dele
 
 ## 2. Banco D1 e bucket R2
@@ -87,10 +87,10 @@
 
 ## 9. Deploy
 
-- [x] 9.1 Deploy em produção (Cloudflare Workers — `@astrojs/cloudflare` v14+
+- [x] 9.1 Deploy em produção (Cloudflare Workers, `@astrojs/cloudflare` v14+
       não roda mais como Pages, ver README) e conectar os bindings de D1/R2 de
       produção. Domínio `hub.pepe-agent.com` anexado ao Worker.
-- [ ] 9.2 Configurar os secrets de produção (`wrangler secret put
+- [x] 9.2 Configurar os secrets de produção (`wrangler secret put
       GITHUB_OAUTH_CLIENT_SECRET`, `SESSION_SECRET`)
 - [x] 9.3 Rodar a migration em produção (`wrangler d1 migrations apply --remote`)
-- [ ] 9.4 Validar o fluxo ponta a ponta: login, publish, busca, download
+- [x] 9.4 Validar o fluxo ponta a ponta: login, publish, busca, download
