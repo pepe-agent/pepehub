@@ -1,0 +1,133 @@
+---
+import { env } from 'cloudflare:workers';
+import PackageCard from '../components/PackageCard.astro';
+import { CATEGORIES } from '../lib/categories';
+import { CATEGORY_LABELS, HOME_SORT_LABELS } from '../lib/constants';
+import { listPackagesForHome, searchPackages, type HomeSort } from '../lib/db';
+import Base from '../layouts/Base.astro';
+
+export const prerender = false;
+
+const url = Astro.url;
+const q = url.searchParams.get('q');
+
+const kindParam = url.searchParams.get('kind');
+const kind = kindParam === 'plugin' || kindParam === 'skill' ? kindParam : null;
+
+const categoryParam = url.searchParams.get('category');
+const category = categoryParam && (CATEGORIES as readonly string[]).includes(categoryParam) ? categoryParam : null;
+
+const sortParam = url.searchParams.get('sort');
+const HOME_SORTS = Object.keys(HOME_SORT_LABELS) as HomeSort[];
+const sort: HomeSort = HOME_SORTS.includes(sortParam as HomeSort) ? (sortParam as HomeSort) : 'new';
+
+const items = q
+  ? (await searchPackages(env.DB, { q, category, kind, cursor: null, limit: 30 })).items
+  : await listPackagesForHome(env.DB, { kind, category, sort, limit: 30 });
+
+function withParam(name: string, value: string | null) {
+  const next = new URL(url);
+  if (value) next.searchParams.set(name, value);
+  else next.searchParams.delete(name);
+  return next.pathname + next.search;
+}
+---
+
+<Base title="Início">
+  <form method="get" action="/" class="search">
+    <input type="search" name="q" placeholder="Buscar pacotes e skills..." value={q ?? ''} />
+    {kind ? <input type="hidden" name="kind" value={kind} /> : null}
+    {category ? <input type="hidden" name="category" value={category} /> : null}
+    <button type="submit">Buscar</button>
+  </form>
+
+  <nav class="tabs">
+    <a href={withParam('kind', null)} aria-current={!kind ? 'page' : undefined}>Tudo</a>
+    <a href={withParam('kind', 'skill')} aria-current={kind === 'skill' ? 'page' : undefined}>Skills</a>
+    <a href={withParam('kind', 'plugin')} aria-current={kind === 'plugin' ? 'page' : undefined}>Plugins</a>
+  </nav>
+
+  {
+    !q && (
+      <nav class="tabs sort-tabs">
+        {Object.entries(HOME_SORT_LABELS).map(([key, label]) => (
+          <a href={withParam('sort', key === 'new' ? null : key)} aria-current={sort === key ? 'page' : undefined}>
+            {label}
+          </a>
+        ))}
+      </nav>
+    )
+  }
+
+  <nav class="tabs categories">
+    <a href={withParam('category', null)} aria-current={!category ? 'page' : undefined}>
+      Todas categorias
+    </a>
+    {
+      CATEGORIES.map((c) => (
+        <a href={withParam('category', c)} aria-current={category === c ? 'page' : undefined}>
+          {CATEGORY_LABELS[c]}
+        </a>
+      ))
+    }
+  </nav>
+
+  {
+    items.length === 0 ? (
+      <p class="empty">Nenhum pacote encontrado.</p>
+    ) : (
+      <div class="grid">
+        {items.map((item) => (
+          <PackageCard item={item} />
+        ))}
+      </div>
+    )
+  }
+</Base>
+
+<style>
+  .search {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .search input[type='search'] {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+  }
+  .search button {
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+  }
+  .tabs {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+  }
+  .tabs a {
+    text-decoration: none;
+    color: var(--text-muted);
+    padding-bottom: 0.25rem;
+    border-bottom: 2px solid transparent;
+  }
+  .tabs a[aria-current='page'] {
+    color: var(--text);
+    border-color: var(--accent);
+  }
+  .categories {
+    margin-bottom: 1.5rem;
+  }
+  .empty {
+    color: var(--text-muted);
+  }
+</style>

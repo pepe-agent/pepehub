@@ -1,0 +1,31 @@
+{
+  "name": "pepehub",
+  "type": "module",
+  "version": "0.0.1",
+  "private": true,
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:migrations:apply:local": "wrangler d1 migrations apply pepehub --local",
+    "db:migrations:apply:remote": "wrangler d1 migrations apply pepehub --remote"
+  },
+  "dependencies": {
+    "@astrojs/cloudflare": "^14.2.0",
+    "astro": "^7.2.0"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.21.0",
+    "@cloudflare/workers-types": "^5.20260811.1",
+    "@types/node": "^26.2.0",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10",
+    "wrangler": "^4.120.1"
+  }
+}

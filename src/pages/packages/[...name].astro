@@ -1,0 +1,23 @@
+---
+import { env } from 'cloudflare:workers';
+import PackageDetail from '../../components/PackageDetail.astro';
+import { findOwnerByHandle, findPackageByName, listVersions } from '../../lib/db';
+import Base from '../../layouts/Base.astro';
+
+export const prerender = false;
+
+const { name } = Astro.params;
+const pkg = name ? await findPackageByName(env.DB, name) : null;
+if (!pkg) {
+  return Astro.rewrite('/404');
+}
+
+const [owner, versions] = await Promise.all([
+  findOwnerByHandle(env.DB, name!.split('/')[0].replace(/^@/, '')),
+  listVersions(env.DB, pkg.id),
+]);
+---
+
+<Base title={pkg.name}>
+  <PackageDetail pkg={pkg} ownerHandle={owner?.handle ?? ''} versions={versions} />
+</Base>

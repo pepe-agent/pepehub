@@ -1,0 +1,94 @@
+---
+import { CATEGORY_LABELS } from '../lib/constants';
+import type { PackageRow, PackageVersionRow } from '../lib/db';
+import { serializeVersion } from '../lib/serialize';
+
+interface Props {
+  pkg: PackageRow;
+  ownerHandle: string;
+  versions: PackageVersionRow[];
+}
+const { pkg, ownerHandle, versions } = Astro.props;
+---
+
+<article>
+  <header class="detail-header">
+    <h1>{pkg.name}</h1>
+    {pkg.official ? <span class="badge official">oficial</span> : null}
+  </header>
+  <p class="meta">
+    <span>por @{ownerHandle}</span>
+    <span class="badge">{CATEGORY_LABELS[pkg.category] ?? pkg.category}</span>
+    <span>{pkg.downloads_count} downloads</span>
+  </p>
+  {pkg.summary ? <p class="summary">{pkg.summary}</p> : null}
+
+  <h2>Versões</h2>
+  {
+    versions.length === 0 ? (
+      <p>Nenhuma versão publicada ainda.</p>
+    ) : (
+      <ul class="versions">
+        {versions.map((v) => {
+          const version = serializeVersion(v);
+          const downloadHref = `/api/v1/packages/${pkg.name}/versions/${version.version}/download`;
+          return (
+            <li class="card version-row">
+              <div class="version-row-header">
+                <strong>{version.version}</strong>
+                <a href={downloadHref}>Baixar</a>
+              </div>
+              {version.changelog ? <p class="changelog">{version.changelog}</p> : null}
+              {version.requires ? (
+                <p class="requires">
+                  requires: <code>{JSON.stringify(version.requires)}</code>
+                </p>
+              ) : null}
+              <p class="sha256">sha256: <code>{version.sha256}</code></p>
+            </li>
+          );
+        })}
+      </ul>
+    )
+  }
+</article>
+
+<style>
+  .detail-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .detail-header h1 {
+    margin: 0;
+  }
+  .meta {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+  .summary {
+    max-width: 60ch;
+  }
+  .versions {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .version-row-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .changelog,
+  .requires,
+  .sha256 {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin: 0.35rem 0 0;
+  }
+</style>

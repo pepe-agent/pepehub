@@ -1,0 +1,51 @@
+schema: spec-driven
+
+context: |
+  Project: PepeHub — registro/marketplace de plugins e skills para o Pepe (o agente
+  de IA em Elixir/OTP que vive em ../pepe, projeto irmão deste). PepeHub não tem
+  NENHUMA dependência de código com o Pepe — os dois só conversam por HTTP (a CLI
+  do Pepe consome a API pública do PepeHub pra buscar, instalar e publicar).
+
+  Tech stack:
+    - Astro (output: "server", adapter @astrojs/cloudflare) — o projeto inteiro
+      roda como um único Cloudflare Pages, sem Worker separado
+    - Cloudflare D1 — metadata (pacotes, versões, donos, dist-tags, estado de confiança)
+    - Cloudflare R2 — artefatos (tarballs/zips dos pacotes), sem custo de egress
+    - GitHub OAuth (Device Flow, igual ao `gh` CLI) — autenticação de quem publica
+    - TypeScript
+
+  Convenções obrigatórias:
+    - mise.toml fixando a versão do Node (lts), igual aos outros projetos
+    - Segredos locais em `.env` (nunca commitado); `.env.example` com placeholders
+      documentando cada chave esperada
+    - Bindings de D1/R2 declarados em `wrangler.toml`; segredos de produção via
+      `wrangler secret put`, nunca em `wrangler.toml`
+    - Commits em inglês, sem Co-Authored-By
+
+  Arquitetura (decisões já tomadas, ver design.md de cada change para o detalhe):
+    - Leitura (busca, metadata, download) é sempre pública, sem autenticação
+    - Publicar exige sessão de um usuário autenticado via GitHub
+    - Namespace de pacote é `@<github-handle>/<nome>` — o handle tem que bater com
+      quem está publicando (dono não pode publicar em nome de outro handle)
+    - Artefato é content-addressed (sha256 calculado no upload, conferido no
+      download); nunca reescreve um artefato já publicado, só adiciona versão nova
+    - `official` é uma flag booleana curada manualmente por um operador do PepeHub -
+      sem scanner de segurança automático na v1 (non-goal explícito)
+
+rules:
+  proposal:
+    - Escreva em português (pt-BR)
+    - Inclua seção "Non-goals" explicitando o que está fora do escopo
+  specs:
+    - Escreva em português (pt-BR)
+    - Use cenários WHEN/THEN/AND orientados a comportamento observável (request/response
+      da API, o que aparece na tela), não a detalhes de implementação
+  design:
+    - Escreva em português (pt-BR)
+    - Documente decisões de schema D1 e layout de chaves no R2 quando relevante
+  tasks:
+    - Escreva em português (pt-BR)
+    - Quebre em tarefas de no máximo 1-2 horas cada
+    - A primeira tarefa de toda change que cria estrutura nova deve cobrir o bootstrap
+      do projeto (mise.toml, .env.example, wrangler.toml, package.json) antes de
+      qualquer feature

@@ -1,0 +1,14 @@
+name = "pepehub"
+compatibility_date = "2026-08-01"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = "dist"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "pepehub"
+database_id = "5b478908-209c-4b17-83e9-1cb011840d87"
+migrations_dir = "migrations"
+
+[[r2_buckets]]
+binding = "ARTIFACTS"
+bucket_name = "pepehub-artifacts" # created by `wrangler r2 bucket create pepehub-artifacts` (task 2.4)
