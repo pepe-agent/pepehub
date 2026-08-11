@@ -26,7 +26,7 @@ export const GET: APIRoute = async ({ params, locals }) => {
   }
 
   // Nunca bloqueia a resposta do download com uma escrita síncrona no D1 (ver
-  // design.md "Risks/Trade-offs") — o incremento roda depois da resposta já
+  // design.md "Risks/Trade-offs"). O incremento roda depois da resposta já
   // ter sido enviada.
   locals.cfContext.waitUntil(incrementDownloadCount(db, pkg.id));
 

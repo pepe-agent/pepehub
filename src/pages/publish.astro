@@ -4,12 +4,11 @@ import Base from '../layouts/Base.astro';
 ---
 
 <Base title="Como publicar">
-  <span class="eyebrow">Publicar</span>
   <h1>Como publicar no PepeHub</h1>
 
   <h2>1. Login</h2>
   <p>
-    A CLI do Pepe autentica via <strong>GitHub Device Flow</strong> — o mesmo modelo do <code>gh auth login</code>:
+    A CLI do Pepe autentica via <strong>GitHub Device Flow</strong>, o mesmo modelo do <code>gh auth login</code>:
   </p>
   <ol>
     <li>
@@ -28,7 +27,7 @@ import Base from '../layouts/Base.astro';
     <code>kind</code>, <code>version</code> (semver) e <code>category</code> (uma das categorias fixas do PepeHub).
   </p>
   <p>
-    O formato completo do manifesto — a estrutura interna do pacote, como declarar comandos, hooks, etc. — é
+    O formato completo do manifesto, a estrutura interna do pacote, como declarar comandos, hooks etc., é
     documentado no site do Pepe, não aqui, pra não duplicar conteúdo:{' '}
     <a href={PEPE_SKILLS_DOCS_URL} rel="noopener">skills</a> ·
     <a href={PEPE_PLUGINS_DOCS_URL} rel="noopener">plugins</a>.
@@ -40,14 +39,14 @@ import Base from '../layouts/Base.astro';
     <pre><code>mix pepe skill publish</code></pre>
   </div>
   <p>
-    O namespace do pacote (<code>@seu-handle/nome</code>) precisa começar com o seu handle do GitHub — a primeira
+    O namespace do pacote (<code>@seu-handle/nome</code>) precisa começar com o seu handle do GitHub: a primeira
     publicação de um nome cria o pacote automaticamente.
   </p>
 </Base>
 
 <style>
   h1 {
-    margin: 0.85rem 0 1.5rem;
+    margin: 0 0 1.5rem;
     font-size: clamp(26px, 4vw, 36px);
   }
   h2 {

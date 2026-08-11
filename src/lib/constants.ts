@@ -1,4 +1,4 @@
-// O PepeHub não duplica a documentação do formato do manifesto — ela mora no
+// O PepeHub não duplica a documentação do formato do manifesto, ela mora no
 // site do Pepe (ver proposal.md e specs/browse-site/spec.md).
 export const PEPE_SKILLS_DOCS_URL = 'https://pepe-agent.com/pt-br/docs/skills';
 export const PEPE_PLUGINS_DOCS_URL = 'https://pepe-agent.com/pt-br/docs/plugins';

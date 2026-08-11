@@ -2,7 +2,7 @@ import { env } from 'cloudflare:workers';
 import { createSessionToken } from '../src/lib/session';
 
 // Module state is re-evaluated per test, but D1 storage persists across tests
-// in the same file — a random id avoids UNIQUE collisions on owners.github_id
+// in the same file. A random id avoids UNIQUE collisions on owners.github_id
 // that a simple incrementing counter would hit.
 function randomGithubId(): number {
   return Math.floor(crypto.getRandomValues(new Uint32Array(1))[0] / 2);

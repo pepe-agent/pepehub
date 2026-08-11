@@ -18,7 +18,7 @@ export const GET: APIRoute = async ({ request }) => {
     return errorResponse(400, 'invalid_category', `Categoria "${category}" não existe.`);
   }
   if (kind && kind !== 'plugin' && kind !== 'skill') {
-    return errorResponse(400, 'invalid_kind', `kind "${kind}" inválido — use "plugin" ou "skill".`);
+    return errorResponse(400, 'invalid_kind', `kind "${kind}" inválido, use "plugin" ou "skill".`);
   }
 
   const cursor = cursorParam ? Number.parseInt(cursorParam, 10) : null;

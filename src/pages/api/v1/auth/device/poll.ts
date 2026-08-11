@@ -32,7 +32,7 @@ export const POST: APIRoute = async ({ request }) => {
     case 'pending':
       return json({ status: 'pending' });
     case 'expired':
-      return errorResponse(400, 'expired', 'O código expirou — inicie o login novamente.');
+      return errorResponse(400, 'expired', 'O código expirou, inicie o login novamente.');
     case 'denied':
       return errorResponse(400, 'access_denied', 'O login foi negado no GitHub.');
     case 'success': {

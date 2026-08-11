@@ -4,7 +4,7 @@ Registro público de plugins e skills do [Pepe](../pepe): publica autenticado vi
 GitHub, busca e baixa sem autenticação. Astro (`output: "server"`) rodando como um
 único Cloudflare Worker (com assets estáticos), com D1 (metadata) e R2 (artefatos).
 
-Produção: https://hub.pepe-agent.com (`wrangler.toml` não tem `main`/`assets` —
+Produção: https://hub.pepe-agent.com (`wrangler.toml` não tem `main`/`assets`:
 o `@astrojs/cloudflare` gera isso em `dist/server/wrangler.json` no build; é
 esse arquivo gerado, não o `wrangler.toml` da raiz, que o deploy usa).
 
@@ -22,7 +22,7 @@ esse arquivo gerado, não o `wrangler.toml` da raiz, que o deploy usa).
      (https://github.com/settings/applications/new).
    - Preencha `Application name` (ex.: `PepeHub (dev)`) e `Homepage URL`
      (ex.: `http://localhost:4321`). O campo `Authorization callback URL` é
-     obrigatório no formulário mas não é usado pelo Device Flow — pode preencher
+     obrigatório no formulário mas não é usado pelo Device Flow, pode preencher
      com a mesma homepage URL.
    - Depois de criar o app, abra **Enable Device Flow** nas configurações do app e
      salve.
@@ -55,7 +55,7 @@ esse arquivo gerado, não o `wrangler.toml` da raiz, que o deploy usa).
   ```
 
 - Aplicar em produção (depois do banco criado e do `wrangler.toml` apontando pro
-  `database_id` real — veja "Deploy"):
+  `database_id` real, veja "Deploy"):
 
   ```sh
   npm run db:migrations:apply:remote
@@ -74,8 +74,8 @@ npm test
    `wrangler.toml`.
 3. `wrangler r2 bucket create pepehub-artifacts`.
 4. `npm run db:migrations:apply:remote`.
-5. `npm run build && wrangler deploy --config dist/server/wrangler.json`
-   — publica o Worker (bindings de D1/R2 já vêm do `wrangler.toml` da raiz,
+5. `npm run build && wrangler deploy --config dist/server/wrangler.json`,
+   que publica o Worker (bindings de D1/R2 já vêm do `wrangler.toml` da raiz,
    propagados pro config gerado no build).
 6. Configure os secrets de produção:
 
@@ -84,18 +84,18 @@ npm test
    wrangler secret put SESSION_SECRET
    ```
 
-   (`GITHUB_OAUTH_CLIENT_ID` não é secreto — pode ir em `[vars]` no
+   (`GITHUB_OAUTH_CLIENT_ID` não é secreto, pode ir em `[vars]` no
    `wrangler.toml` ou também via `wrangler secret put`, tanto faz.)
 
 7. Repita o passo 2 do "Setup local" pra criar um segundo GitHub OAuth App
    (produção), com a `Homepage URL` de produção (`https://hub.pepe-agent.com`).
-8. Domínio customizado (uma vez): `wrangler.toml` não declara rotas — o domínio
+8. Domínio customizado (uma vez): `wrangler.toml` não declara rotas, o domínio
    `hub.pepe-agent.com` foi anexado ao Worker via a API de Workers Custom
    Domains (`PUT /accounts/:id/workers/domains`), não pelo dashboard de Pages.
 
 ## Marcar um pacote como "oficial"
 
-Curadoria manual na v1 — não existe rota pública pra isso. Direto no D1 de
+Curadoria manual na v1: não existe rota pública pra isso. Direto no D1 de
 produção:
 
 ```sh
@@ -107,7 +107,7 @@ Pra reverter, o mesmo comando com `official = 0`.
 
 ## Marcar um pacote como "featured"
 
-Mesma curadoria manual, mesmo mecanismo — controla a ordenação "Featured" da
+Mesma curadoria manual, mesmo mecanismo, controla a ordenação "Featured" da
 home:
 
 ```sh

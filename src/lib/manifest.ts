@@ -33,7 +33,7 @@ export function parseManifest(raw: unknown): PublishManifest | ManifestValidatio
     if (typeof data.requires !== 'object' || data.requires === null || Array.isArray(data.requires)) {
       return { field: 'requires', message: 'requires precisa ser um objeto ({ env, bins })' };
     }
-    // Guardado verbatim — o PepeHub não valida se os valores fazem sentido,
+    // Guardado verbatim: o PepeHub não valida se os valores fazem sentido,
     // só quem instala confere presença (ver design.md "Requisitos declarados").
     requiresJson = JSON.stringify(data.requires);
   }

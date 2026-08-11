@@ -231,7 +231,7 @@ export interface HomeListParams {
   limit: number;
 }
 
-// Listagem simples (sem cursor) pra home do site — separada de searchPackages
+// Listagem simples (sem cursor) pra home do site, separada de searchPackages
 // porque essa não é a API pública documentada em registry-read-api/spec.md, só
 // consumida pelas próprias páginas Astro renderizadas no servidor.
 export async function listPackagesForHome(db: D1Database, params: HomeListParams): Promise<SearchResultItem[]> {
