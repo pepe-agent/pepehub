@@ -60,9 +60,11 @@
 
 ## 7. Publicar de um repositório (source-publish)
 
-- [ ] 7.1 Implementar `source: { repo, ref }` no publish, com clone raso
-- [ ] 7.2 Recusar repositório privado, fork, ou arquivado (`422`)
-- [ ] 7.3 Testes cobrindo os cenários de `specs/source-publish/spec.md`
+- [x] 7.1 Implementar `source: { repo, ref }` no publish, com clone raso (na
+      prática: tarball/zipball da API do GitHub pro `ref` pedido, sem
+      histórico — não tem binário `git` disponível no runtime de Workers)
+- [x] 7.2 Recusar repositório privado, fork, ou arquivado (`422`)
+- [x] 7.3 Testes cobrindo os cenários de `specs/source-publish/spec.md`
 
 ## 8. Endpoint compatível com npm (npm-compatible-endpoint)
 

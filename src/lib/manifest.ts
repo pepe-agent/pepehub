@@ -1,5 +1,10 @@
 import { isCategory, type Category } from './categories';
 
+export interface PublishSource {
+  repo: string;
+  ref: string;
+}
+
 export interface PublishManifest {
   kind: 'plugin' | 'skill';
   version: string;
@@ -8,6 +13,7 @@ export interface PublishManifest {
   changelog: string | null;
   tag: string;
   requiresJson: string | null;
+  source: PublishSource | null;
 }
 
 export type ManifestValidationError = { field: string; message: string };
@@ -38,6 +44,25 @@ export function parseManifest(raw: unknown): PublishManifest | ManifestValidatio
     requiresJson = JSON.stringify(data.requires);
   }
 
+  let source: PublishSource | null = null;
+  if (data.source !== undefined) {
+    const rawSource = data.source;
+    if (
+      typeof rawSource !== 'object' ||
+      rawSource === null ||
+      typeof (rawSource as Record<string, unknown>).repo !== 'string' ||
+      !/^[^/\s]+\/[^/\s]+$/.test((rawSource as Record<string, unknown>).repo as string) ||
+      typeof (rawSource as Record<string, unknown>).ref !== 'string' ||
+      !(rawSource as Record<string, unknown>).ref
+    ) {
+      return { field: 'source', message: 'source precisa ser { repo: "owner/repo", ref: "branch-ou-sha" }' };
+    }
+    source = {
+      repo: (rawSource as Record<string, unknown>).repo as string,
+      ref: (rawSource as Record<string, unknown>).ref as string,
+    };
+  }
+
   return {
     kind: data.kind,
     version: data.version,
@@ -46,6 +71,7 @@ export function parseManifest(raw: unknown): PublishManifest | ManifestValidatio
     changelog: typeof data.changelog === 'string' ? data.changelog : null,
     tag: typeof data.tag === 'string' && data.tag ? data.tag : 'latest',
     requiresJson,
+    source,
   };
 }
 

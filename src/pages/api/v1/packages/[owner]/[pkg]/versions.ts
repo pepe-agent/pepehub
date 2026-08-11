@@ -15,6 +15,7 @@ import { isManifestError, parseManifest } from '../../../../../../lib/manifest';
 import { enqueueScan } from '../../../../../../lib/scanning';
 import { bearerToken, verifySessionToken } from '../../../../../../lib/session';
 import { serializeVersion } from '../../../../../../lib/serialize';
+import { checkRepoEligible, fetchArtifactFromRepo } from '../../../../../../lib/sourcePublish';
 import {
   claimsMatchTrustedPublisher,
   getTrustedPublisher,
@@ -137,11 +138,6 @@ export const POST: APIRoute = async ({ params, request, locals }) => {
     return errorResponse(400, 'invalid_manifest', `${manifest.field}: ${manifest.message}`);
   }
 
-  const artifact = form.get('artifact');
-  if (!(artifact instanceof Blob) || artifact.size === 0) {
-    return errorResponse(400, 'invalid_artifact', 'artifact precisa ser um arquivo (tarball ou zip).');
-  }
-
   const kind = existingPackage?.kind ?? manifest.kind;
 
   if (existingPackage) {
@@ -151,13 +147,43 @@ export const POST: APIRoute = async ({ params, request, locals }) => {
     }
   }
 
-  const artifactBuffer = await artifact.arrayBuffer();
+  let artifactBuffer: ArrayBuffer;
+  let contentType: string;
+
+  if (manifest.source) {
+    // source-publish/spec.md: repositório privado, fork ou arquivado nunca
+    // chega a gravar nada (a checagem roda antes de qualquer escrita).
+    const eligibility = await checkRepoEligible(manifest.source.repo, env.GITHUB_API_TOKEN);
+    if (!eligibility.ok) {
+      const reasonText: Record<string, string> = {
+        private: 'é privado',
+        fork: 'é um fork',
+        archived: 'está arquivado',
+        not_found: 'não foi encontrado',
+      };
+      return errorResponse(
+        422,
+        `source_${eligibility.reason}`,
+        `Repositório "${manifest.source.repo}" ${reasonText[eligibility.reason!]}.`,
+      );
+    }
+    artifactBuffer = await fetchArtifactFromRepo(manifest.source.repo, manifest.source.ref, kind, env.GITHUB_API_TOKEN);
+    contentType = kind === 'plugin' ? 'application/gzip' : 'application/zip';
+  } else {
+    const artifact = form.get('artifact');
+    if (!(artifact instanceof Blob) || artifact.size === 0) {
+      return errorResponse(400, 'invalid_artifact', 'artifact precisa ser um arquivo (tarball ou zip).');
+    }
+    artifactBuffer = await artifact.arrayBuffer();
+    contentType = artifact.type || 'application/octet-stream';
+  }
+
   const sha256 = await sha256Hex(artifactBuffer);
   const ext = kind === 'plugin' ? 'tgz' : 'zip';
   const r2Key = `packages/${identity.handle}/${pkgSlug}/${manifest.version}.${ext}`;
 
   await r2.put(r2Key, artifactBuffer, {
-    httpMetadata: { contentType: artifact.type || 'application/octet-stream' },
+    httpMetadata: { contentType },
   });
 
   const pkg =
@@ -176,7 +202,7 @@ export const POST: APIRoute = async ({ params, request, locals }) => {
       packageId: pkg.id,
       version: manifest.version,
       sha256,
-      sizeBytes: artifact.size,
+      sizeBytes: artifactBuffer.byteLength,
       r2Key,
       changelog: manifest.changelog,
       requiresJson: manifest.requiresJson,
