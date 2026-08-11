@@ -60,19 +60,12 @@ const session = Astro.locals.session;
     session && (
       <>
         <h2>Publicar</h2>
-        <form id="upload-form" class="card">
+        <form id="upload-form" class="card" novalidate>
           <div class="field">
             <label for="slug">Nome do pacote</label>
             <div class="namespaced-input">
               <span class="prefix">@{session.handle}/</span>
-              <input
-                type="text"
-                id="slug"
-                name="slug"
-                required
-                pattern="[a-z0-9][a-z0-9-]*"
-                placeholder="meu-skill"
-              />
+              <input type="text" id="slug" name="slug" placeholder="meu-skill" />
             </div>
           </div>
 
@@ -91,11 +84,11 @@ const session = Astro.locals.session;
           <div class="field-row">
             <div class="field">
               <label for="version">Versão</label>
-              <input type="text" id="version" name="version" required placeholder="1.0.0" pattern="\d+\.\d+\.\d+.*" />
+              <input type="text" id="version" name="version" placeholder="1.0.0" />
             </div>
             <div class="field">
               <label for="category">Categoria</label>
-              <select id="category" name="category" required>
+              <select id="category" name="category">
                 {CATEGORIES.map((cat) => (
                   <option value={cat}>{CATEGORY_LABELS[cat] ?? cat}</option>
                 ))}
@@ -115,7 +108,7 @@ const session = Astro.locals.session;
 
           <div class="field">
             <label for="artifact">Arquivo</label>
-            <input type="file" id="artifact" name="artifact" required accept=".zip,.tgz,.tar.gz" />
+            <input type="file" id="artifact" name="artifact" accept=".zip,.tgz,.tar.gz" />
           </div>
 
           <button type="submit" class="btn btn-primary">Publicar</button>
@@ -237,6 +230,14 @@ const session = Astro.locals.session;
   .status.success {
     color: var(--green);
   }
+  .field.field-error label {
+    color: #f87171;
+  }
+  .field.field-error input,
+  .field.field-error select,
+  .field.field-error .namespaced-input {
+    border-color: #f87171;
+  }
   .examples {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -256,18 +257,50 @@ const session = Astro.locals.session;
 <script>
   const form = document.getElementById('upload-form') as HTMLFormElement | null;
   const status = document.getElementById('upload-status');
+  const slugInput = document.getElementById('slug') as HTMLInputElement | null;
+  const versionInput = document.getElementById('version') as HTMLInputElement | null;
+  const artifactInput = document.getElementById('artifact') as HTMLInputElement | null;
+
+  const SLUG_RE = /^[a-z0-9][a-z0-9-]*$/;
+  const VERSION_RE = /^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/;
+
+  function clearFieldErrors() {
+    form?.querySelectorAll('.field-error').forEach((el) => el.classList.remove('field-error'));
+  }
+
+  function showFieldError(input: HTMLElement, message: string) {
+    clearFieldErrors();
+    input.closest('.field')?.classList.add('field-error');
+    if (status) {
+      status.textContent = message;
+      status.className = 'status error';
+    }
+    input.focus();
+  }
+
+  form?.addEventListener('input', () => clearFieldErrors());
 
   form?.addEventListener('submit', async (event) => {
     event.preventDefault();
     if (!status) return;
 
+    clearFieldErrors();
+
     const data = new FormData(form);
     const slug = String(data.get('slug') ?? '').trim();
+    const version = String(data.get('version') ?? '').trim();
     const artifact = data.get('artifact');
 
-    if (!slug || !(artifact instanceof File)) {
-      status.textContent = 'Preencha o nome do pacote e escolha um arquivo.';
-      status.className = 'status error';
+    if (!SLUG_RE.test(slug)) {
+      if (slugInput) showFieldError(slugInput, 'Nome do pacote precisa começar com letra ou número e usar só minúsculas, números e hífen.');
+      return;
+    }
+    if (!VERSION_RE.test(version)) {
+      if (versionInput) showFieldError(versionInput, 'Versão precisa ser um semver válido, tipo 1.0.0.');
+      return;
+    }
+    if (!(artifact instanceof File) || artifact.size === 0) {
+      if (artifactInput) showFieldError(artifactInput, 'Escolha um arquivo pra publicar.');
       return;
     }
 
