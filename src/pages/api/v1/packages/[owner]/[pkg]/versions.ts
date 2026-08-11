@@ -14,7 +14,7 @@ import { errorResponse, json } from '../../../../../../lib/http';
 import { isManifestError, parseManifest } from '../../../../../../lib/manifest';
 import { getReservedName } from '../../../../../../lib/platformAdmin';
 import { enqueueScan } from '../../../../../../lib/scanning';
-import { bearerToken, verifySessionToken } from '../../../../../../lib/session';
+import { SESSION_COOKIE_NAME, bearerToken, readCookie, verifySessionToken } from '../../../../../../lib/session';
 import { serializeVersion } from '../../../../../../lib/serialize';
 import { checkRepoEligible, fetchArtifactFromRepo } from '../../../../../../lib/sourcePublish';
 import {
@@ -57,6 +57,21 @@ async function resolvePublishIdentity(
 ): Promise<{ identity: PublishIdentity } | { error: Response }> {
   const token = bearerToken(request);
   if (!token) {
+    // Upload pelo formulário do site (sem Bearer): aceita a sessão do
+    // cookie só quando o Fetch Metadata do próprio navegador confirma que a
+    // chamada partiu do nosso site (Sec-Fetch-Site), já que checkOrigin
+    // está desligado globalmente (astro.config.mjs). CLI e OIDC continuam
+    // exigindo Bearer, sem exceção.
+    if (request.headers.get('Sec-Fetch-Site') === 'same-origin') {
+      const cookieToken = readCookie(request, SESSION_COOKIE_NAME);
+      const cookieSession = cookieToken ? await verifySessionToken(cookieToken, sessionSecret) : null;
+      if (cookieSession) {
+        if (!existingPackage && ownerParam.toLowerCase() !== `@${cookieSession.handle.toLowerCase()}`) {
+          return { error: errorResponse(403, 'namespace_mismatch', `Você não pode publicar em "${ownerParam}".`) };
+        }
+        return { identity: { ownerId: cookieSession.ownerId, handle: cookieSession.handle } };
+      }
+    }
     return { error: errorResponse(401, 'unauthorized', 'Sessão ausente, inválida ou expirada.') };
   }
 

@@ -1,0 +1,319 @@
+---
+import { CATEGORIES } from '../../lib/categories';
+import { CATEGORY_LABELS } from '../../lib/constants';
+import Base from '../../layouts/Base.astro';
+
+const session = Astro.locals.session;
+---
+
+<Base title="Publicar pelo navegador">
+  <h1>Publicar pelo navegador</h1>
+  <p class="lead">
+    Sem instalar a CLI: envie o arquivo do seu skill ou plugin direto por aqui. Pra automação (CI, releases),
+    use a <a href="/publish">CLI</a> ou um <a href="/publish">publisher confiável</a> em vez disso.
+  </p>
+
+  <h2>Como empacotar</h2>
+  <p class="lead">
+    O conteúdo interno de um skill ou plugin é o mesmo de sempre (documentado no site do Pepe: <a
+      href="https://pepe-agent.com/pt-br/docs/skills"
+      rel="noopener">skills</a
+    > · <a href="https://pepe-agent.com/pt-br/docs/plugins" rel="noopener">plugins</a>). O que muda aqui é só o
+    empacotamento do arquivo que você envia.
+  </p>
+
+  <div class="examples">
+    <div class="example">
+      <h3>Skill → .zip</h3>
+      <p>Um arquivo Markdown na raiz do zip, nomeado como o pacote:</p>
+      <div class="terminal">
+        <div class="bar"><i></i><i></i><i></i></div>
+        <pre><code>meu-skill.zip
+└── meu-skill.md</code></pre>
+      </div>
+    </div>
+
+    <div class="example">
+      <h3>Plugin → .tgz</h3>
+      <p><code>manifest.json</code> na raiz, junto dos arquivos que ele referencia em <code>files</code>:</p>
+      <div class="terminal">
+        <div class="bar"><i></i><i></i><i></i></div>
+        <pre><code>meu-plugin.tgz
+├── manifest.json
+└── meu-plugin.exs</code></pre>
+      </div>
+    </div>
+  </div>
+
+  {
+    !session && (
+      <div class="card login-prompt">
+        <p>Você precisa estar logado pra publicar.</p>
+        <a class="btn btn-primary" href="/login">
+          Entrar com GitHub
+        </a>
+      </div>
+    )
+  }
+
+  {
+    session && (
+      <>
+        <h2>Publicar</h2>
+        <form id="upload-form" class="card">
+          <div class="field">
+            <label for="slug">Nome do pacote</label>
+            <div class="namespaced-input">
+              <span class="prefix">@{session.handle}/</span>
+              <input
+                type="text"
+                id="slug"
+                name="slug"
+                required
+                pattern="[a-z0-9][a-z0-9-]*"
+                placeholder="meu-skill"
+              />
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Tipo</label>
+            <div class="radio-row">
+              <label class="radio">
+                <input type="radio" name="kind" value="skill" checked /> Skill (.zip)
+              </label>
+              <label class="radio">
+                <input type="radio" name="kind" value="plugin" /> Plugin (.tgz)
+              </label>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="version">Versão</label>
+              <input type="text" id="version" name="version" required placeholder="1.0.0" pattern="\d+\.\d+\.\d+.*" />
+            </div>
+            <div class="field">
+              <label for="category">Categoria</label>
+              <select id="category" name="category" required>
+                {CATEGORIES.map((cat) => (
+                  <option value={cat}>{CATEGORY_LABELS[cat] ?? cat}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="summary">Resumo</label>
+            <input type="text" id="summary" name="summary" placeholder="O que esse pacote faz, em uma linha" />
+          </div>
+
+          <div class="field">
+            <label for="changelog">Changelog desta versão (opcional)</label>
+            <textarea id="changelog" name="changelog" rows="3"></textarea>
+          </div>
+
+          <div class="field">
+            <label for="artifact">Arquivo</label>
+            <input type="file" id="artifact" name="artifact" required accept=".zip,.tgz,.tar.gz" />
+          </div>
+
+          <button type="submit" class="btn btn-primary">Publicar</button>
+          <p id="upload-status" class="status"></p>
+        </form>
+      </>
+    )
+  }
+</Base>
+
+<style>
+  h1 {
+    margin: 0 0 0.75rem;
+    font-size: clamp(26px, 4vw, 36px);
+  }
+  h2 {
+    font-size: 1.2rem;
+    margin: 2.5rem 0 0.85rem;
+  }
+  h3 {
+    font-size: 1rem;
+    margin: 0 0 0.5rem;
+  }
+  .lead {
+    color: var(--muted);
+    line-height: 1.7;
+    max-width: 640px;
+  }
+  .login-prompt {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 1.5rem;
+  }
+  .login-prompt p {
+    margin: 0;
+    color: var(--muted);
+  }
+  form.card {
+    margin-top: 1.5rem;
+    max-width: 560px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .field-row {
+    display: flex;
+    gap: 18px;
+  }
+  .field-row .field {
+    flex: 1;
+  }
+  label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  input[type='text'],
+  input[type='file'],
+  select,
+  textarea {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 15px;
+    padding: 9px 12px;
+  }
+  textarea {
+    resize: vertical;
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+  .namespaced-input {
+    display: flex;
+    align-items: center;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding-left: 12px;
+  }
+  .namespaced-input .prefix {
+    color: var(--dim);
+    font-family: var(--mono);
+    font-size: 14px;
+    white-space: nowrap;
+  }
+  .namespaced-input input {
+    border: none;
+    background: none;
+    flex: 1;
+  }
+  .radio-row {
+    display: flex;
+    gap: 20px;
+  }
+  .radio {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 400;
+    color: var(--muted);
+  }
+  .status {
+    margin: 0;
+    font-size: 14px;
+    min-height: 1.4em;
+  }
+  .status.error {
+    color: #f87171;
+  }
+  .status.success {
+    color: var(--green);
+  }
+  .examples {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+    max-width: 800px;
+  }
+  .example p {
+    color: var(--muted);
+    font-size: 14px;
+    margin: 0 0 0.6rem;
+  }
+  .example .terminal pre {
+    font-size: 13px;
+  }
+</style>
+
+<script>
+  const form = document.getElementById('upload-form') as HTMLFormElement | null;
+  const status = document.getElementById('upload-status');
+
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!status) return;
+
+    const data = new FormData(form);
+    const slug = String(data.get('slug') ?? '').trim();
+    const artifact = data.get('artifact');
+
+    if (!slug || !(artifact instanceof File)) {
+      status.textContent = 'Preencha o nome do pacote e escolha um arquivo.';
+      status.className = 'status error';
+      return;
+    }
+
+    const manifest = {
+      kind: data.get('kind'),
+      version: data.get('version'),
+      category: data.get('category'),
+      summary: data.get('summary') || null,
+      changelog: data.get('changelog') || null,
+    };
+
+    const body = new FormData();
+    body.set('manifest', JSON.stringify(manifest));
+    body.set('artifact', artifact);
+
+    const prefix = document.querySelector('.namespaced-input .prefix')?.textContent ?? '';
+    const owner = prefix.replace('/', '');
+
+    status.textContent = 'Publicando...';
+    status.className = 'status';
+
+    const submitButton = form.querySelector('button[type="submit"]') as HTMLButtonElement | null;
+    if (submitButton) submitButton.disabled = true;
+
+    try {
+      const res = await fetch(`/api/v1/packages/${encodeURIComponent(owner)}/${encodeURIComponent(slug)}/versions`, {
+        method: 'POST',
+        body,
+        credentials: 'include',
+      });
+
+      if (res.ok) {
+        status.textContent = 'Publicado! Redirecionando...';
+        status.className = 'status success';
+        window.location.href = `/${owner}/${slug}`;
+        return;
+      }
+
+      const errorBody = await res.json().catch(() => null);
+      status.textContent = errorBody?.message ?? `Falha ao publicar (${res.status}).`;
+      status.className = 'status error';
+    } catch {
+      status.textContent = 'Falha de rede ao publicar.';
+      status.className = 'status error';
+    } finally {
+      if (submitButton) submitButton.disabled = false;
+    }
+  });
+</script>
