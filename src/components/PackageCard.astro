@@ -11,14 +11,14 @@ const detailHref = `/${item.kind === 'skill' ? 'skills' : 'packages'}/${item.nam
 
 <a class="card package-card" href={detailHref}>
   <div class="row">
-    <strong>{item.name}</strong>
+    <strong class="name">{item.name}</strong>
     {item.official ? <span class="badge official">oficial</span> : null}
   </div>
   <p class="summary">{item.summary ?? 'Sem resumo.'}</p>
   <div class="meta">
     <span class="badge">{CATEGORY_LABELS[item.category] ?? item.category}</span>
-    <span class="owner">@{item.owner_handle}</span>
-    <span class="downloads">{item.downloads_count} downloads</span>
+    <span>@{item.owner_handle}</span>
+    <span>{item.downloads_count} downloads</span>
   </div>
 </a>
 
@@ -26,22 +26,35 @@ const detailHref = `/${item.kind === 'skill' ? 'skills' : 'packages'}/${item.nam
   .package-card {
     display: block;
     text-decoration: none;
-    margin-bottom: 0.75rem;
+    color: inherit;
+    transition:
+      border-color 0.15s,
+      transform 0.15s;
+  }
+  .package-card:hover {
+    border-color: #3f3f46;
+    color: inherit;
   }
   .package-card .row {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.6rem;
+  }
+  .package-card .name {
+    font-size: 1.02rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
   }
   .package-card .summary {
-    color: var(--text-muted);
-    margin: 0.4rem 0 0.6rem;
+    color: var(--muted);
+    margin: 0.4rem 0 0.8rem;
+    font-size: 0.92rem;
   }
   .package-card .meta {
     display: flex;
     gap: 0.75rem;
     align-items: center;
-    font-size: 0.85rem;
-    color: var(--text-muted);
+    font-size: 0.82rem;
+    color: var(--dim);
   }
 </style>

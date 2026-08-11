@@ -36,7 +36,9 @@ const { pkg, ownerHandle, versions } = Astro.props;
             <li class="card version-row">
               <div class="version-row-header">
                 <strong>{version.version}</strong>
-                <a href={downloadHref}>Baixar</a>
+                <a class="download-link" href={downloadHref}>
+                  Baixar
+                </a>
               </div>
               {version.changelog ? <p class="changelog">{version.changelog}</p> : null}
               {version.requires ? (
@@ -58,19 +60,27 @@ const { pkg, ownerHandle, versions } = Astro.props;
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    flex-wrap: wrap;
   }
   .detail-header h1 {
     margin: 0;
+    font-size: clamp(24px, 4vw, 32px);
   }
   .meta {
     display: flex;
     gap: 0.75rem;
     align-items: center;
-    color: var(--text-muted);
+    color: var(--muted);
     font-size: 0.9rem;
+    margin: 0.6rem 0 1.25rem;
   }
   .summary {
     max-width: 60ch;
+    color: var(--muted);
+  }
+  h2 {
+    font-size: 1.15rem;
+    margin: 2rem 0 1rem;
   }
   .versions {
     list-style: none;
@@ -78,17 +88,30 @@ const { pkg, ownerHandle, versions } = Astro.props;
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
+    margin: 0;
   }
   .version-row-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
   }
+  .download-link {
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.3rem 0.7rem;
+    border-radius: 8px;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+  }
+  .download-link:hover {
+    border-color: var(--accent-soft);
+    color: var(--accent-soft);
+  }
   .changelog,
   .requires,
   .sha256 {
-    color: var(--text-muted);
+    color: var(--dim);
     font-size: 0.85rem;
-    margin: 0.35rem 0 0;
+    margin: 0.5rem 0 0;
   }
 </style>

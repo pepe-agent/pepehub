@@ -24,6 +24,9 @@ pnpm-debug.log*
 # Claude Code local project settings
 .claude/
 
+# Playwright MCP local artifacts (screenshots, traces)
+.playwright-mcp/
+
 # macOS-specific files
 .DS_Store
 

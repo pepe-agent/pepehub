@@ -2,7 +2,11 @@
 
 Registro público de plugins e skills do [Pepe](../pepe): publica autenticado via
 GitHub, busca e baixa sem autenticação. Astro (`output: "server"`) rodando como um
-único Cloudflare Pages, com D1 (metadata) e R2 (artefatos).
+único Cloudflare Worker (com assets estáticos), com D1 (metadata) e R2 (artefatos).
+
+Produção: https://hub.pepe-agent.com (`wrangler.toml` não tem `main`/`assets` —
+o `@astrojs/cloudflare` gera isso em `dist/server/wrangler.json` no build; é
+esse arquivo gerado, não o `wrangler.toml` da raiz, que o deploy usa).
 
 ## Setup local
 
@@ -70,9 +74,9 @@ npm test
    `wrangler.toml`.
 3. `wrangler r2 bucket create pepehub-artifacts`.
 4. `npm run db:migrations:apply:remote`.
-5. Crie o projeto Cloudflare Pages e conecte os bindings de D1 (`DB`) e R2
-   (`ARTIFACTS`) de produção (o `wrangler.toml` já declara os bindings; o passo
-   manual no dashboard é confirmar que o projeto Pages os herda no deploy).
+5. `npm run build && wrangler deploy --config dist/server/wrangler.json`
+   — publica o Worker (bindings de D1/R2 já vêm do `wrangler.toml` da raiz,
+   propagados pro config gerado no build).
 6. Configure os secrets de produção:
 
    ```sh
@@ -84,7 +88,10 @@ npm test
    `wrangler.toml` ou também via `wrangler secret put`, tanto faz.)
 
 7. Repita o passo 2 do "Setup local" pra criar um segundo GitHub OAuth App
-   (produção), com a `Homepage URL` de produção.
+   (produção), com a `Homepage URL` de produção (`https://hub.pepe-agent.com`).
+8. Domínio customizado (uma vez): `wrangler.toml` não declara rotas — o domínio
+   `hub.pepe-agent.com` foi anexado ao Worker via a API de Workers Custom
+   Domains (`PUT /accounts/:id/workers/domains`), não pelo dashboard de Pages.
 
 ## Marcar um pacote como "oficial"
 

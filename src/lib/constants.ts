@@ -1,7 +1,7 @@
-// TODO: apontar pro domínio real do site do Pepe quando ele existir — o
-// PepeHub não deve duplicar a documentação do formato do manifesto (ver
-// proposal.md e specs/browse-site/spec.md).
-export const PEPE_MANIFEST_DOCS_URL = 'https://pepe.dev/docs/manifest';
+// O PepeHub não duplica a documentação do formato do manifesto — ela mora no
+// site do Pepe (ver proposal.md e specs/browse-site/spec.md).
+export const PEPE_SKILLS_DOCS_URL = 'https://pepe-agent.com/pt-br/docs/skills';
+export const PEPE_PLUGINS_DOCS_URL = 'https://pepe-agent.com/pt-br/docs/plugins';
 
 export const CATEGORY_LABELS: Record<string, string> = {
   channel: 'Canal',
