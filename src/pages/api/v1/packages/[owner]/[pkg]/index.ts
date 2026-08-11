@@ -4,6 +4,7 @@ import { findOwnerById, findPackageByName, getDistTag } from '../../../../../../
 import { errorResponse, json } from '../../../../../../lib/http';
 import { getModerationState } from '../../../../../../lib/moderation';
 import { serializePackage } from '../../../../../../lib/serialize';
+import { getStarsCount } from '../../../../../../lib/stars';
 
 export const prerender = false;
 
@@ -19,6 +20,7 @@ export const GET: APIRoute = async ({ params }) => {
   const owner = await findOwnerById(db, pkg.owner_id);
   const latestVersion = await getDistTag(db, pkg.id, 'latest');
   const moderationState = await getModerationState(db, pkg.id);
+  const starsCount = await getStarsCount(db, pkg.id);
 
-  return json(serializePackage(pkg, owner!.handle, latestVersion, moderationState));
+  return json(serializePackage(pkg, owner!.handle, latestVersion, moderationState, starsCount));
 };

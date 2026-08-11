@@ -263,6 +263,7 @@ export interface SearchParams {
 export interface SearchResultItem extends PackageRow {
   owner_handle: string;
   moderation_state: ModerationState;
+  stars_count: number;
 }
 
 // hidden some da busca/navegação (moderation/spec.md); held e blocked
@@ -271,6 +272,7 @@ export interface SearchResultItem extends PackageRow {
 const NOT_HIDDEN_CONDITION = "(m.state IS NULL OR m.state != 'hidden') AND p.deleted_at IS NULL";
 const MODERATION_JOIN = 'LEFT JOIN package_moderation_state m ON m.package_id = p.id';
 const MODERATION_STATE_COLUMN = "COALESCE(m.state, 'visible') AS moderation_state";
+const STARS_COUNT_COLUMN = '(SELECT COUNT(*) FROM package_stars s WHERE s.package_id = p.id) AS stars_count';
 
 export async function searchPackages(
   db: D1Database,
@@ -303,7 +305,7 @@ export async function searchPackages(
 
   const result = await db
     .prepare(
-      `SELECT p.*, o.handle AS owner_handle, ${MODERATION_STATE_COLUMN}
+      `SELECT p.*, o.handle AS owner_handle, ${MODERATION_STATE_COLUMN}, ${STARS_COUNT_COLUMN}
        FROM packages p
        JOIN owners o ON o.id = p.owner_id
        ${MODERATION_JOIN}
@@ -357,7 +359,7 @@ export async function listPackagesForHome(db: D1Database, params: HomeListParams
 
   const result = await db
     .prepare(
-      `SELECT p.*, o.handle AS owner_handle, ${MODERATION_STATE_COLUMN}
+      `SELECT p.*, o.handle AS owner_handle, ${MODERATION_STATE_COLUMN}, ${STARS_COUNT_COLUMN}
        FROM packages p
        JOIN owners o ON o.id = p.owner_id
        ${MODERATION_JOIN}

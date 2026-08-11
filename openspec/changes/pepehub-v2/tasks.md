@@ -45,10 +45,10 @@
 
 ## 5. Favoritos (package-stars)
 
-- [ ] 5.1 Migration: tabela de favoritos (`package_id`, `owner_id`, única)
-- [ ] 5.2 Implementar favoritar/desfavoritar, idempotente
-- [ ] 5.3 Expor a contagem na metadata do pacote
-- [ ] 5.4 Testes cobrindo os cenários de `specs/package-stars/spec.md`
+- [x] 5.1 Migration: tabela de favoritos (`package_id`, `owner_id`, única)
+- [x] 5.2 Implementar favoritar/desfavoritar, idempotente
+- [x] 5.3 Expor a contagem na metadata do pacote
+- [x] 5.4 Testes cobrindo os cenários de `specs/package-stars/spec.md`
 
 ## 6. Publisher confiável (trusted-publisher)
 

@@ -10,6 +10,7 @@ export function serializeSearchItem(row: SearchResultItem) {
     official: Boolean(row.official),
     owner: row.owner_handle,
     moderationState: row.moderation_state,
+    starsCount: row.stars_count,
   };
 }
 
@@ -18,6 +19,7 @@ export function serializePackage(
   ownerHandle: string,
   latestVersion: string | null,
   moderationState: ModerationState,
+  starsCount: number,
 ) {
   return {
     name: row.name,
@@ -30,6 +32,7 @@ export function serializePackage(
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     moderationState,
+    starsCount,
   };
 }
 
