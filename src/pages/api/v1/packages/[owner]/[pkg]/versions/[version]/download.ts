@@ -20,6 +20,10 @@ export const GET: APIRoute = async ({ params, locals }) => {
     return errorResponse(404, 'not_found', `Versão "${params.version}" não encontrada para "${name}".`);
   }
 
+  if (version.scan_status === 'malicious') {
+    return errorResponse(403, 'malicious', 'Essa versão foi sinalizada como maliciosa pela varredura de segurança.');
+  }
+
   const object = await r2.get(version.r2_key);
   if (!object) {
     return errorResponse(404, 'not_found', 'Artefato não encontrado no armazenamento.');

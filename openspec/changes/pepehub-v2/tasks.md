@@ -8,16 +8,18 @@
 
 ## 2. Varredura de segurança (artifact-scanning)
 
-- [ ] 2.1 Migration: tabela `artifact_scans`
-- [ ] 2.2 Enfileirar uma varredura ao final de todo publish bem-sucedido
+- [x] 2.1 Migration: tabela `artifact_scans`
+- [x] 2.2 Enfileirar uma varredura ao final de todo publish bem-sucedido
       (fora do caminho crítico da resposta)
-- [ ] 2.3 Integração com um serviço de reputação de arquivo de terceiros
-      (ex.: API pública do VirusTotal) - grava `status`/`risk_level`/
-      `findings_json` quando a resposta chega
-- [ ] 2.4 Bloquear download (`403`) de uma versão com `status = malicious`,
+- [x] 2.3 Integração com um serviço de reputação de arquivo de terceiros
+      (VirusTotal) - grava `status`/`risk_level`/`findings_json` quando a
+      resposta chega. Precisa de `VIRUSTOTAL_API_KEY` configurada (secret) pra
+      funcionar de verdade em produção; sem ela toda varredura termina em
+      `error`, nunca bloqueando o registro (comportamento intencional)
+- [x] 2.4 Bloquear download (`403`) de uma versão com `status = malicious`,
       sem afetar outras versões do mesmo pacote
-- [ ] 2.5 Expor `scan.status`/`scan.riskLevel` na metadata de uma versão
-- [ ] 2.6 Testes cobrindo os cenários de `specs/artifact-scanning/spec.md`
+- [x] 2.5 Expor `scan.status`/`scan.riskLevel` na metadata de uma versão
+- [x] 2.6 Testes cobrindo os cenários de `specs/artifact-scanning/spec.md`
 
 ## 3. Moderação (moderation)
 

@@ -1,10 +1,11 @@
 import { env } from 'cloudflare:workers';
+import { createExecutionContext } from 'cloudflare:test';
 import { describe, expect, it } from 'vitest';
 import { GET as versionsGet, POST as publishPost } from '../src/pages/api/v1/packages/[owner]/[pkg]/versions';
 import { publishForm, sessionTokenFor } from './helpers';
 
 function ctx(url: string, params: Record<string, string>, init?: RequestInit) {
-  return { request: new Request(url, init), params } as any;
+  return { request: new Request(url, init), params, locals: { cfContext: createExecutionContext() } } as any;
 }
 
 async function publishRequest(

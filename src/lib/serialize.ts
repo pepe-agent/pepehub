@@ -37,5 +37,6 @@ export function serializeVersion(row: PackageVersionRow) {
     createdAt: row.created_at,
     changelog: row.changelog,
     requires: row.requires_json ? JSON.parse(row.requires_json) : null,
+    scan: row.scan_status ? { status: row.scan_status, riskLevel: row.scan_risk_level } : null,
   };
 }

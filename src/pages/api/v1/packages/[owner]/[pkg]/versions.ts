@@ -11,6 +11,7 @@ import {
 import { sha256Hex } from '../../../../../../lib/hash';
 import { errorResponse, json } from '../../../../../../lib/http';
 import { isManifestError, parseManifest } from '../../../../../../lib/manifest';
+import { enqueueScan } from '../../../../../../lib/scanning';
 import { requireSession } from '../../../../../../lib/session';
 import { serializeVersion } from '../../../../../../lib/serialize';
 
@@ -29,7 +30,7 @@ export const GET: APIRoute = async ({ params }) => {
   return json({ items: versions.map(serializeVersion) });
 };
 
-export const POST: APIRoute = async ({ params, request }) => {
+export const POST: APIRoute = async ({ params, request, locals }) => {
   const { DB: db, ARTIFACTS: r2, SESSION_SECRET: sessionSecret } = env;
 
   const session = await requireSession(request, sessionSecret);
@@ -120,6 +121,10 @@ export const POST: APIRoute = async ({ params, request }) => {
   }
 
   await setDistTag(db, pkg.id, manifest.tag, manifest.version);
+
+  // Fora do caminho crítico (design.md "Varredura de segurança") — o publish
+  // já respondeu antes da varredura terminar.
+  locals.cfContext.waitUntil(enqueueScan(db, version.id, artifactBuffer, env.VIRUSTOTAL_API_KEY));
 
   return json(
     {

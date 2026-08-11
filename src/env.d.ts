@@ -12,5 +12,8 @@ declare namespace Cloudflare {
     GITHUB_OAUTH_CLIENT_ID: string;
     GITHUB_OAUTH_CLIENT_SECRET: string;
     SESSION_SECRET: string;
+    // Opcional: sem ela, toda varredura termina em `error` (ver
+    // src/lib/scanning.ts) em vez de bloquear o resto do registro.
+    VIRUSTOTAL_API_KEY?: string;
   }
 }

@@ -1,3 +1,5 @@
+import type { ScanRiskLevel, ScanStatus } from './scanning';
+
 export interface OwnerRow {
   id: number;
   github_id: number;
@@ -29,6 +31,22 @@ export interface PackageVersionRow {
   r2_key: string;
   changelog: string | null;
   requires_json: string | null;
+  created_at: string;
+  // Varredura mais recente dessa versão (LEFT JOIN correlacionado em
+  // findVersion/listVersions) — null quando ainda não foi enfileirada.
+  scan_status: ScanStatus | null;
+  scan_risk_level: ScanRiskLevel | null;
+}
+
+export interface ArtifactScanRow {
+  id: number;
+  package_version_id: number;
+  status: ScanStatus;
+  risk_level: ScanRiskLevel | null;
+  findings_json: string | null;
+  provider: string | null;
+  provider_ref: string | null;
+  scanned_at: string | null;
   created_at: string;
 }
 
@@ -82,20 +100,32 @@ export async function incrementDownloadCount(db: D1Database, packageId: number):
   await db.prepare('UPDATE packages SET downloads_count = downloads_count + 1 WHERE id = ?').bind(packageId).run();
 }
 
+// Subquery correlacionada pra varredura mais recente de cada versão, em vez
+// de N+1: uma versão pode ter mais de uma linha em artifact_scans (rescan),
+// só a mais nova importa pra exibição/bloqueio de download.
+const LATEST_SCAN_COLUMNS = `
+  (SELECT status FROM artifact_scans WHERE package_version_id = pv.id ORDER BY created_at DESC LIMIT 1) AS scan_status,
+  (SELECT risk_level FROM artifact_scans WHERE package_version_id = pv.id ORDER BY created_at DESC LIMIT 1) AS scan_risk_level
+`;
+
 export async function findVersion(
   db: D1Database,
   packageId: number,
   version: string,
 ): Promise<PackageVersionRow | null> {
   return db
-    .prepare('SELECT * FROM package_versions WHERE package_id = ? AND version = ?')
+    .prepare(
+      `SELECT pv.*, ${LATEST_SCAN_COLUMNS} FROM package_versions pv WHERE pv.package_id = ? AND pv.version = ?`,
+    )
     .bind(packageId, version)
     .first<PackageVersionRow>();
 }
 
 export async function listVersions(db: D1Database, packageId: number): Promise<PackageVersionRow[]> {
   const result = await db
-    .prepare('SELECT * FROM package_versions WHERE package_id = ? ORDER BY created_at DESC')
+    .prepare(
+      `SELECT pv.*, ${LATEST_SCAN_COLUMNS} FROM package_versions pv WHERE pv.package_id = ? ORDER BY pv.created_at DESC`,
+    )
     .bind(packageId)
     .all<PackageVersionRow>();
   return result.results ?? [];
@@ -129,7 +159,7 @@ export async function insertVersion(
       now(),
     )
     .first<PackageVersionRow>();
-  return result!;
+  return { ...result!, scan_status: null, scan_risk_level: null };
 }
 
 export async function setDistTag(
@@ -262,4 +292,44 @@ export async function listPackagesForHome(db: D1Database, params: HomeListParams
     .all<SearchResultItem>();
 
   return result.results ?? [];
+}
+
+export async function insertPendingScan(db: D1Database, packageVersionId: number): Promise<ArtifactScanRow> {
+  const result = await db
+    .prepare(
+      `INSERT INTO artifact_scans (package_version_id, status, created_at)
+       VALUES (?, 'pending', ?) RETURNING *`,
+    )
+    .bind(packageVersionId, now())
+    .first<ArtifactScanRow>();
+  return result!;
+}
+
+export async function updateScanResult(
+  db: D1Database,
+  scanId: number,
+  params: { status: ScanStatus; riskLevel: ScanRiskLevel | null; findings: unknown; provider: string },
+): Promise<void> {
+  await db
+    .prepare(
+      `UPDATE artifact_scans SET status = ?, risk_level = ?, findings_json = ?, provider = ?, scanned_at = ?
+       WHERE id = ?`,
+    )
+    .bind(
+      params.status,
+      params.riskLevel,
+      params.findings ? JSON.stringify(params.findings) : null,
+      params.provider,
+      now(),
+      scanId,
+    )
+    .run();
+}
+
+export async function getLatestScanStatus(db: D1Database, packageVersionId: number): Promise<ScanStatus | null> {
+  const row = await db
+    .prepare('SELECT status FROM artifact_scans WHERE package_version_id = ? ORDER BY created_at DESC LIMIT 1')
+    .bind(packageVersionId)
+    .first<{ status: ScanStatus }>();
+  return row?.status ?? null;
 }
