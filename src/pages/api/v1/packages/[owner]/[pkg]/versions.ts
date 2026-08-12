@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { env } from 'cloudflare:workers';
+import { matchesArchiveFormat } from '../../../../../../lib/archive';
 import {
   createPackage,
   findOwnerById,
@@ -185,6 +186,11 @@ export const POST: APIRoute = async ({ params, request, locals }) => {
     }
     artifactBuffer = await artifact.arrayBuffer();
     contentType = artifact.type || 'application/octet-stream';
+
+    if (!matchesArchiveFormat(artifactBuffer, kind)) {
+      const expected = kind === 'plugin' ? 'tarball (.tgz)' : 'zip (.zip)';
+      return errorResponse(400, 'invalid_artifact_format', `O arquivo enviado não parece ser um ${expected} válido.`);
+    }
   }
 
   const sha256 = await sha256Hex(artifactBuffer);

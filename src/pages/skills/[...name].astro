@@ -3,6 +3,7 @@ import { env } from 'cloudflare:workers';
 import PackageDetail from '../../components/PackageDetail.astro';
 import RelatedPackages from '../../components/RelatedPackages.astro';
 import { findOwnerByHandle, findPackageByName, findRelatedPackages, listVersions } from '../../lib/db';
+import { getStarsCount, hasStarred } from '../../lib/stars';
 import Base from '../../layouts/Base.astro';
 
 export const prerender = false;
@@ -13,14 +14,24 @@ if (!pkg) {
   return Astro.rewrite('/404');
 }
 
-const [owner, versions, related] = await Promise.all([
+const session = Astro.locals.session;
+const [owner, versions, related, starsCount, viewerHasStarred] = await Promise.all([
   findOwnerByHandle(env.DB, name!.split('/')[0].replace(/^@/, '')),
   listVersions(env.DB, pkg.id),
   findRelatedPackages(env.DB, { category: pkg.category, kind: 'skill', excludePackageId: pkg.id, limit: 5 }),
+  getStarsCount(env.DB, pkg.id),
+  session ? hasStarred(env.DB, pkg.id, session.ownerId) : Promise.resolve(false),
 ]);
 ---
 
 <Base title={pkg.name}>
-  <PackageDetail pkg={pkg} ownerHandle={owner?.handle ?? ''} versions={versions} session={Astro.locals.session} />
+  <PackageDetail
+    pkg={pkg}
+    ownerHandle={owner?.handle ?? ''}
+    versions={versions}
+    session={session}
+    starsCount={starsCount}
+    hasStarred={viewerHasStarred}
+  />
   <RelatedPackages items={related} category={pkg.category} kind="skill" />
 </Base>

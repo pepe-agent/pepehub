@@ -116,6 +116,28 @@ describe('POST /api/v1/packages/<name>/versions', () => {
     expect(withoutReqBody.version.requires).toBeNull();
   });
 
+  it('recusa artefato cujos bytes não batem com o kind declarado', async () => {
+    const token = await sessionTokenFor('helen');
+    const form = new FormData();
+    form.set('manifest', JSON.stringify({ kind: 'plugin', version: '1.0.0', category: 'tool' }));
+    // Kind "plugin" espera gzip (1f 8b); manda bytes de zip (PK) de propósito.
+    form.set('artifact', new File([new Uint8Array([0x50, 0x4b, 0x03, 0x04, 0x00])], 'artifact'));
+
+    const res = await publishPost(
+      ctx('http://test/api/v1/packages/@helen/errado/versions', { owner: '@helen', pkg: 'errado' }, {
+        method: 'POST',
+        body: form,
+        headers: { Authorization: `Bearer ${token}` },
+      }),
+    );
+    expect(res.status).toBe(400);
+    const body: any = await res.json();
+    expect(body.error).toBe('invalid_artifact_format');
+
+    const listRes = await versionsGet(ctx('http://test/api/v1/packages/@helen/errado/versions', { owner: '@helen', pkg: 'errado' }));
+    expect(listRes.status).toBe(404);
+  });
+
   it('retorna 409 e não sobrescreve ao tentar publicar uma versão já existente', async () => {
     const token = await sessionTokenFor('frank');
     const manifest = { kind: 'plugin', version: '1.0.0', category: 'tool' };
@@ -127,7 +149,9 @@ describe('POST /api/v1/packages/<name>/versions', () => {
     expect(second.status).toBe(409);
 
     const stored = await env.ARTIFACTS.get('packages/frank/dup/1.0.0.tgz');
-    expect(await stored?.text()).toBe('conteudo-original');
+    const storedText = await stored?.text();
+    expect(storedText).toContain('conteudo-original');
+    expect(storedText).not.toContain('conteudo-diferente');
 
     const versions = await env.DB.prepare(
       'SELECT COUNT(*) as count FROM package_versions pv JOIN packages p ON p.id = pv.package_id WHERE p.name = ?',

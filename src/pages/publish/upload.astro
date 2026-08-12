@@ -302,6 +302,18 @@ const session = Astro.locals.session;
       return;
     }
 
+    const kind = data.get('kind');
+    const expectedExt = kind === 'plugin' ? '.tgz' : '.zip';
+    if (!artifact.name.toLowerCase().endsWith(expectedExt)) {
+      if (artifactInput) {
+        showFieldError(
+          artifactInput,
+          `Tipo "${kind === 'plugin' ? 'Plugin' : 'Skill'}" espera um arquivo ${expectedExt}, mas "${artifact.name}" não é.`,
+        );
+      }
+      return;
+    }
+
     const manifest = {
       kind: data.get('kind'),
       version: data.get('version'),

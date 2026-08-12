@@ -3,14 +3,14 @@ import { env } from 'cloudflare:workers';
 import { findPackageByName, findVersion } from '../../../../../../lib/db';
 import { errorResponse, json } from '../../../../../../lib/http';
 import { createReport } from '../../../../../../lib/moderation';
-import { requireSession } from '../../../../../../lib/session';
+import { resolveMutationSession } from '../../../../../../lib/session';
 
 export const prerender = false;
 
 export const POST: APIRoute = async ({ params, request }) => {
   const { DB: db, SESSION_SECRET: sessionSecret } = env;
 
-  const session = await requireSession(request, sessionSecret);
+  const session = await resolveMutationSession(request, sessionSecret);
   if (!session) {
     return errorResponse(401, 'unauthorized', 'Sessão ausente, inválida ou expirada.');
   }

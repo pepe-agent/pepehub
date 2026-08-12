@@ -2,7 +2,7 @@ import type { APIRoute } from 'astro';
 import { env } from 'cloudflare:workers';
 import { findPackageByName } from '../../../../../../lib/db';
 import { errorResponse, json } from '../../../../../../lib/http';
-import { requireSession } from '../../../../../../lib/session';
+import { resolveMutationSession } from '../../../../../../lib/session';
 import { getStarsCount, unstar } from '../../../../../../lib/stars';
 
 export const prerender = false;
@@ -10,7 +10,7 @@ export const prerender = false;
 export const POST: APIRoute = async ({ params, request }) => {
   const { DB: db, SESSION_SECRET: sessionSecret } = env;
 
-  const session = await requireSession(request, sessionSecret);
+  const session = await resolveMutationSession(request, sessionSecret);
   if (!session) {
     return errorResponse(401, 'unauthorized', 'Sessão ausente, inválida ou expirada.');
   }

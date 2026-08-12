@@ -18,10 +18,22 @@ export async function sessionTokenFor(handle: string, opts: { isOperator?: boole
   return createSessionToken({ ownerId: owner!.id, githubId, handle }, env.SESSION_SECRET);
 }
 
+const ZIP_MAGIC = new Uint8Array([0x50, 0x4b, 0x03, 0x04]);
+const GZIP_MAGIC = new Uint8Array([0x1f, 0x8b, 0x08, 0x00]);
+
 export function publishForm(manifest: Record<string, unknown>, artifact: { content: string; type?: string }) {
   const form = new FormData();
   form.set('manifest', JSON.stringify(manifest));
-  form.set('artifact', new File([artifact.content], 'artifact', { type: artifact.type ?? 'application/gzip' }));
+  // Prefixa com a assinatura de bytes certa (matchesArchiveFormat em
+  // versions.ts recusa artefato cujos bytes não batem com o kind
+  // declarado). O resto do conteúdo é irrelevante pros testes de publish,
+  // que não fazem parsing de arquivo de verdade.
+  const magic = manifest.kind === 'plugin' ? GZIP_MAGIC : ZIP_MAGIC;
+  const contentBytes = new TextEncoder().encode(artifact.content);
+  const bytes = new Uint8Array(magic.length + contentBytes.length);
+  bytes.set(magic, 0);
+  bytes.set(contentBytes, magic.length);
+  form.set('artifact', new File([bytes], 'artifact', { type: artifact.type ?? 'application/gzip' }));
   return form;
 }
 
@@ -63,7 +75,7 @@ export async function seedPackage(params: {
 export async function seedVersion(params: {
   packageId: number;
   version: string;
-  content?: string;
+  content?: string | Uint8Array;
   r2Key: string;
   changelog?: string;
   tag?: string;
@@ -71,8 +83,8 @@ export async function seedVersion(params: {
 }) {
   const timestamp = new Date().toISOString();
   const content = params.content ?? 'fake-artifact-bytes';
-  const bytes = new TextEncoder().encode(content);
-  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  const bytes = typeof content === 'string' ? new TextEncoder().encode(content) : content;
+  const digest = await crypto.subtle.digest('SHA-256', bytes as BufferSource);
   const sha256 = [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
 
   await env.ARTIFACTS.put(params.r2Key, bytes);

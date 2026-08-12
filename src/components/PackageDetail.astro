@@ -10,9 +10,14 @@ interface Props {
   ownerHandle: string;
   versions: PackageVersionRow[];
   session: SessionPayload | null;
+  starsCount: number;
+  hasStarred: boolean;
 }
-const { pkg, ownerHandle, versions, session } = Astro.props;
+const { pkg, ownerHandle, versions, session, starsCount, hasStarred } = Astro.props;
 const isOwner = session?.ownerId === pkg.owner_id;
+const latestVersion = versions[0] ?? null;
+const installCmd = `pepe ${pkg.kind} install ${pkg.name}`;
+const readmeTabLabel = pkg.kind === 'skill' ? 'SKILL.md' : 'README';
 
 const SCAN_LABELS: Record<string, string> = {
   pending: 'Verificação pendente',
@@ -28,22 +33,38 @@ const SCAN_CLASSES: Record<string, string> = {
   warning: 'scan-warning',
   malicious: 'scan-malicious',
 };
+
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+const versionsWithRequires = versions
+  .map((v) => serializeVersion(v))
+  .filter((v) => v.requires !== null);
 ---
 
-<article>
+<article class="detail">
+  <nav class="breadcrumb">
+    <a href={`/?kind=${pkg.kind}`}>{pkg.kind === 'skill' ? 'Skills' : 'Plugins'}</a>
+    <span>/</span>
+    <a href={`/?category=${pkg.category}&kind=${pkg.kind}`}>{CATEGORY_LABELS[pkg.category] ?? pkg.category}</a>
+    <span>/</span>
+    <span>{pkg.name}</span>
+  </nav>
+
   <header class="detail-header">
     <h1>{pkg.name}</h1>
     {pkg.official ? <span class="badge official">oficial</span> : null}
-  </header>
-  <p class="meta">
-    <span>por @{ownerHandle}</span>
-    <span id="category-display" class="badge">{CATEGORY_LABELS[pkg.category] ?? pkg.category}</span>
-    <span>{pkg.downloads_count} downloads</span>
     {isOwner ? (
       <button type="button" id="edit-toggle" class="edit-toggle">
         Editar
       </button>
     ) : null}
+  </header>
+  <p class="meta">
+    <span>por @{ownerHandle}</span>
+    <span id="category-display" class="badge">{CATEGORY_LABELS[pkg.category] ?? pkg.category}</span>
+    <span>{pkg.downloads_count} downloads</span>
   </p>
   <p id="summary-display" class="summary">{pkg.summary ?? ''}</p>
 
@@ -73,44 +94,205 @@ const SCAN_CLASSES: Record<string, string> = {
     )
   }
 
-  <h2>Versões</h2>
-  {
-    versions.length === 0 ? (
-      <p>Nenhuma versão publicada ainda.</p>
-    ) : (
-      <ul class="versions">
-        {versions.map((v) => {
-          const version = serializeVersion(v);
-          const downloadHref = `/api/v1/packages/${pkg.name}/versions/${version.version}/download`;
-          return (
-            <li class="card version-row">
-              <div class="version-row-header">
-                <strong>{version.version}</strong>
-                <a class="download-link" href={downloadHref}>
-                  Baixar
-                </a>
+  <div class="layout">
+    <div class="main-col">
+      <div class="tabs-nav" role="tablist">
+        <button type="button" class="tab-btn active" data-tab="readme">{readmeTabLabel}</button>
+        <button type="button" class="tab-btn" data-tab="files">Files</button>
+        <button type="button" class="tab-btn" data-tab="diff">Diff</button>
+        <button type="button" class="tab-btn" data-tab="versions">Versions</button>
+        <button type="button" class="tab-btn" data-tab="requirements">Requirements</button>
+      </div>
+
+      <div class="tab-panel" data-panel="readme">
+        {
+          latestVersion ? (
+            <div id="readme-body" class="readme-body">
+              <p class="tab-loading">Carregando...</p>
+            </div>
+          ) : (
+            <p class="tab-empty">Nenhuma versão publicada ainda.</p>
+          )
+        }
+      </div>
+
+      <div class="tab-panel" data-panel="files" hidden>
+        {
+          latestVersion ? (
+            <div class="files-layout">
+              <ul id="files-list" class="files-list">
+                <li class="tab-loading">Carregando...</li>
+              </ul>
+              <pre id="file-viewer" class="file-viewer"><code>Selecione um arquivo à esquerda.</code></pre>
+            </div>
+          ) : (
+            <p class="tab-empty">Nenhuma versão publicada ainda.</p>
+          )
+        }
+      </div>
+
+      <div class="tab-panel" data-panel="diff" hidden>
+        {
+          versions.length >= 2 ? (
+            <>
+              <div class="diff-controls">
+                <select id="diff-from">
+                  {versions.map((v, i) => (
+                    <option value={v.version} selected={i === 1}>
+                      {v.version}
+                    </option>
+                  ))}
+                </select>
+                <span class="diff-arrow">para</span>
+                <select id="diff-to">
+                  {versions.map((v, i) => (
+                    <option value={v.version} selected={i === 0}>
+                      {v.version}
+                    </option>
+                  ))}
+                </select>
               </div>
-              {version.scan ? (
-                <p class={`badge scan-badge ${SCAN_CLASSES[version.scan.status] ?? ''}`}>
-                  {SCAN_LABELS[version.scan.status] ?? version.scan.status}
-                </p>
-              ) : null}
-              {version.changelog ? <p class="changelog">{version.changelog}</p> : null}
-              {version.requires ? (
-                <p class="requires">
-                  requires: <code>{JSON.stringify(version.requires)}</code>
-                </p>
-              ) : null}
-              <p class="sha256">sha256: <code>{version.sha256}</code></p>
-            </li>
-          );
-        })}
-      </ul>
-    )
-  }
+              <div id="diff-body" class="diff-body">
+                <p class="tab-loading">Carregando...</p>
+              </div>
+            </>
+          ) : (
+            <p class="tab-empty">É preciso pelo menos 2 versões publicadas pra comparar.</p>
+          )
+        }
+      </div>
+
+      <div class="tab-panel" data-panel="versions" hidden>
+        {
+          versions.length === 0 ? (
+            <p class="tab-empty">Nenhuma versão publicada ainda.</p>
+          ) : (
+            <ul class="versions">
+              {versions.map((v) => {
+                const version = serializeVersion(v);
+                const downloadHref = `/api/v1/packages/${pkg.name}/versions/${version.version}/download`;
+                return (
+                  <li class="card version-row">
+                    <div class="version-row-header">
+                      <strong>{version.version}</strong>
+                      <a class="download-link" href={downloadHref}>
+                        Baixar
+                      </a>
+                    </div>
+                    {version.scan ? (
+                      <p class={`badge scan-badge ${SCAN_CLASSES[version.scan.status] ?? ''}`}>
+                        {SCAN_LABELS[version.scan.status] ?? version.scan.status}
+                      </p>
+                    ) : null}
+                    {version.changelog ? <p class="changelog">{version.changelog}</p> : null}
+                    <p class="sha256">
+                      sha256: <code>{version.sha256}</code>
+                    </p>
+                  </li>
+                );
+              })}
+            </ul>
+          )
+        }
+      </div>
+
+      <div class="tab-panel" data-panel="requirements" hidden>
+        {
+          versionsWithRequires.length === 0 ? (
+            <p class="tab-empty">Nenhuma versão declarou requisitos.</p>
+          ) : (
+            <ul class="requirements-list">
+              {versionsWithRequires.map((v) => (
+                <li class="card">
+                  <strong>{v.version}</strong>
+                  <pre><code>{JSON.stringify(v.requires, null, 2)}</code></pre>
+                </li>
+              ))}
+            </ul>
+          )
+        }
+      </div>
+    </div>
+
+    <aside class="sidebar">
+      <div class="card sidebar-card">
+        <dl class="sidebar-meta">
+          <div class="sidebar-meta-row">
+            <dt>Atualizado</dt>
+            <dd>{formatDate(pkg.updated_at)}</dd>
+          </div>
+          {latestVersion && (
+            <div class="sidebar-meta-row">
+              <dt>Última versão</dt>
+              <dd>{latestVersion.version}</dd>
+            </div>
+          )}
+        </dl>
+        {latestVersion?.scan_status && (
+          <p class={`badge scan-badge sidebar-scan ${SCAN_CLASSES[latestVersion.scan_status] ?? ''}`}>
+            {SCAN_LABELS[latestVersion.scan_status] ?? latestVersion.scan_status}
+          </p>
+        )}
+
+        {session ? (
+          <button
+            type="button"
+            id="star-toggle"
+            class="btn btn-ghost sidebar-action"
+            data-starred={hasStarred ? 'true' : 'false'}
+          >
+            <span id="star-label">{hasStarred ? 'Favoritado' : 'Favoritar'}</span> (<span id="stars-count">{starsCount}</span>)
+          </button>
+        ) : (
+          <a class="btn btn-ghost sidebar-action" href="/login">
+            Entrar pra favoritar
+          </a>
+        )}
+
+        {session && (
+          <>
+            <button type="button" id="report-toggle" class="btn btn-ghost sidebar-action">
+              Reportar
+            </button>
+            <form id="report-form" class="report-form" novalidate hidden>
+              <label for="report-reason">Motivo da denúncia</label>
+              <textarea id="report-reason" name="reason" rows="3" placeholder="Por que está reportando esse pacote?" />
+              <div class="report-actions">
+                <button type="submit" class="btn btn-primary">Enviar</button>
+                <button type="button" id="report-cancel" class="btn btn-ghost">Cancelar</button>
+              </div>
+              <p id="report-status" class="status"></p>
+            </form>
+          </>
+        )}
+
+        <div class="install-hint">
+          <p class="install-hint-label">Instalar</p>
+          <div class="terminal">
+            <div class="bar"><i></i><i></i><i></i></div>
+            <pre><code>{installCmd}</code></pre>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
 </article>
 
 <style>
+  .breadcrumb {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+    color: var(--dim);
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+  }
+  .breadcrumb a {
+    color: var(--dim);
+  }
+  .breadcrumb a:hover {
+    color: var(--accent-soft);
+  }
   .detail-header {
     display: flex;
     align-items: center;
@@ -206,16 +388,198 @@ const SCAN_CLASSES: Record<string, string> = {
   .status.success {
     color: var(--green);
   }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 260px;
+    gap: 28px;
+    align-items: start;
+    margin-top: 1.75rem;
+  }
+  @media (max-width: 860px) {
+    .layout {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .tabs-nav {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 1.25rem;
+    overflow-x: auto;
+  }
+  .tab-btn {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--muted);
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 0.6rem 0.85rem;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .tab-btn:hover {
+    color: var(--text);
+  }
+  .tab-btn.active {
+    color: var(--text);
+    border-color: var(--accent);
+  }
+  .tab-panel[hidden] {
+    display: none;
+  }
+  .tab-loading,
+  .tab-empty {
+    color: var(--dim);
+    font-size: 0.9rem;
+  }
+
+  .readme-body :global(h1),
+  .readme-body :global(h2),
+  .readme-body :global(h3) {
+    margin: 1.4rem 0 0.6rem;
+  }
+  .readme-body :global(p) {
+    color: var(--muted);
+    line-height: 1.7;
+    margin: 0 0 0.9rem;
+  }
+  .readme-body :global(a) {
+    color: var(--accent-soft);
+  }
+  .readme-body :global(pre) {
+    margin: 0 0 0.9rem;
+  }
+  .readme-body :global(ul),
+  .readme-body :global(ol) {
+    color: var(--muted);
+    padding-left: 1.3rem;
+    margin: 0 0 0.9rem;
+  }
+  .readme-body :global(img) {
+    max-width: 100%;
+  }
+  .readme-body :global(table) {
+    border-collapse: collapse;
+    margin: 0 0 0.9rem;
+  }
+  .readme-body :global(th),
+  .readme-body :global(td) {
+    border: 1px solid var(--border);
+    padding: 0.4rem 0.6rem;
+    font-size: 0.9rem;
+  }
+
+  .files-layout {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 18px;
+  }
+  @media (max-width: 640px) {
+    .files-layout {
+      grid-template-columns: 1fr;
+    }
+  }
+  .files-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .files-list li + li {
+    border-top: 1px solid var(--border);
+  }
+  .files-list button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: var(--panel);
+    border: none;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    padding: 0.5rem 0.7rem;
+    cursor: pointer;
+  }
+  .files-list button:hover,
+  .files-list button.active {
+    background: var(--panel-2);
+    color: var(--text);
+  }
+  .file-viewer {
+    margin: 0;
+    max-height: 480px;
+    overflow: auto;
+  }
+
+  .diff-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 1.1rem;
+  }
+  .diff-controls select {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    padding: 0.4rem 0.6rem;
+  }
+  .diff-arrow {
+    color: var(--dim);
+    font-size: 0.85rem;
+  }
+  .diff-file {
+    margin-bottom: 1rem;
+  }
+  .diff-file-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    margin-bottom: 0.4rem;
+  }
+  .diff-hunk {
+    margin: 0;
+    padding: 0.35rem 0.7rem;
+    font-size: 0.8rem;
+    white-space: pre-wrap;
+    border-left: 3px solid transparent;
+  }
+  .diff-hunk.added {
+    background: rgba(34, 197, 94, 0.08);
+    border-color: var(--green);
+  }
+  .diff-hunk.removed {
+    background: rgba(248, 113, 113, 0.08);
+    border-color: #f87171;
+  }
+
   h2 {
     font-size: 1.15rem;
     margin: 2rem 0 1rem;
   }
-  .versions {
+  .versions,
+  .requirements-list {
     list-style: none;
     padding: 0;
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
+    margin: 0;
+  }
+  .requirements-list strong {
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+  .requirements-list pre {
     margin: 0;
   }
   .version-row-header {
@@ -236,7 +600,6 @@ const SCAN_CLASSES: Record<string, string> = {
     color: var(--accent-soft);
   }
   .changelog,
-  .requires,
   .sha256 {
     color: var(--dim);
     font-size: 0.85rem;
@@ -260,71 +623,363 @@ const SCAN_CLASSES: Record<string, string> = {
     border-color: rgba(248, 113, 113, 0.35);
     background: rgba(248, 113, 113, 0.08);
   }
+
+  .sidebar-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .sidebar-meta {
+    margin: 0;
+  }
+  .sidebar-meta-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    padding: 0.3rem 0;
+  }
+  .sidebar-meta-row + .sidebar-meta-row {
+    border-top: 1px solid var(--border);
+  }
+  .sidebar-meta dt {
+    color: var(--dim);
+  }
+  .sidebar-scan {
+    align-self: flex-start;
+  }
+  .sidebar-action {
+    width: 100%;
+    justify-content: center;
+  }
+  .report-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .report-form[hidden] {
+    display: none;
+  }
+  .report-form textarea {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 13px;
+    padding: 8px 10px;
+    resize: vertical;
+  }
+  .report-actions {
+    display: flex;
+    gap: 8px;
+  }
+  .install-hint {
+    margin-top: 6px;
+  }
+  .install-hint-label {
+    margin: 0 0 0.4rem;
+    font-size: 0.8rem;
+    color: var(--dim);
+  }
+  .install-hint .terminal pre {
+    font-size: 0.78rem;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
 </style>
 
+<script define:vars={{ pkgName: pkg.name, latestVersionStr: latestVersion?.version ?? null }}>
+  window.__pepehubPkgName = pkgName;
+  window.__pepehubLatestVersion = latestVersionStr;
+</script>
 <script>
-  const toggle = document.getElementById('edit-toggle');
-  const form = document.getElementById('metadata-form') as HTMLFormElement | null;
-  const cancelButton = document.getElementById('metadata-cancel');
-  const status = document.getElementById('metadata-status');
+  const pkgName = (window as any).__pepehubPkgName as string;
+  const latestVersion = (window as any).__pepehubLatestVersion as string | null;
+  const apiBase = `/api/v1/packages/${pkgName}`;
+
+  // Edit form (metadata)
+  const editToggle = document.getElementById('edit-toggle');
+  const metadataForm = document.getElementById('metadata-form') as HTMLFormElement | null;
+  const metadataCancel = document.getElementById('metadata-cancel');
+  const metadataStatus = document.getElementById('metadata-status');
   const summaryDisplay = document.getElementById('summary-display');
   const categoryDisplay = document.getElementById('category-display');
   const categorySelect = document.getElementById('metadata-category') as HTMLSelectElement | null;
 
-  toggle?.addEventListener('click', () => {
-    form?.toggleAttribute('hidden');
-  });
-
-  cancelButton?.addEventListener('click', () => {
-    form?.setAttribute('hidden', '');
-    if (status) {
-      status.textContent = '';
-      status.className = 'status';
+  editToggle?.addEventListener('click', () => metadataForm?.toggleAttribute('hidden'));
+  metadataCancel?.addEventListener('click', () => {
+    metadataForm?.setAttribute('hidden', '');
+    if (metadataStatus) {
+      metadataStatus.textContent = '';
+      metadataStatus.className = 'status';
     }
   });
 
-  form?.addEventListener('submit', async (event) => {
+  metadataForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
-    if (!status || !form) return;
-
-    const data = new FormData(form);
+    if (!metadataStatus || !metadataForm) return;
+    const data = new FormData(metadataForm);
     const summary = String(data.get('summary') ?? '').trim();
     const category = String(data.get('category') ?? '');
-    const path = window.location.pathname;
 
-    status.textContent = 'Salvando...';
-    status.className = 'status';
-
-    const submitButton = form.querySelector('button[type="submit"]') as HTMLButtonElement | null;
+    metadataStatus.textContent = 'Salvando...';
+    metadataStatus.className = 'status';
+    const submitButton = metadataForm.querySelector('button[type="submit"]') as HTMLButtonElement | null;
     if (submitButton) submitButton.disabled = true;
 
     try {
-      const res = await fetch(`/api/v1/packages${path.replace(/^\/(packages|skills)/, '')}/metadata`, {
+      const res = await fetch(`${apiBase}/metadata`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ summary: summary || null, category }),
         credentials: 'include',
       });
-
       if (res.ok) {
         if (summaryDisplay) summaryDisplay.textContent = summary;
         if (categoryDisplay && categorySelect) {
           categoryDisplay.textContent = categorySelect.selectedOptions[0]?.textContent ?? category;
         }
-        status.textContent = 'Salvo.';
-        status.className = 'status success';
-        form.setAttribute('hidden', '');
+        metadataStatus.textContent = 'Salvo.';
+        metadataStatus.className = 'status success';
+        metadataForm.setAttribute('hidden', '');
         return;
       }
-
       const errorBody = await res.json().catch(() => null);
-      status.textContent = errorBody?.message ?? `Falha ao salvar (${res.status}).`;
-      status.className = 'status error';
+      metadataStatus.textContent = errorBody?.message ?? `Falha ao salvar (${res.status}).`;
+      metadataStatus.className = 'status error';
     } catch {
-      status.textContent = 'Falha de rede ao salvar.';
-      status.className = 'status error';
+      metadataStatus.textContent = 'Falha de rede ao salvar.';
+      metadataStatus.className = 'status error';
     } finally {
       if (submitButton) submitButton.disabled = false;
     }
   });
+
+  // Star
+  const starToggle = document.getElementById('star-toggle') as HTMLButtonElement | null;
+  const starLabel = document.getElementById('star-label');
+  const starsCountEl = document.getElementById('stars-count');
+  starToggle?.addEventListener('click', async () => {
+    const starred = starToggle.dataset.starred === 'true';
+    starToggle.disabled = true;
+    try {
+      const res = await fetch(`${apiBase}/${starred ? 'unstar' : 'star'}`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (res.ok) {
+        const body = await res.json();
+        starToggle.dataset.starred = String(body.starred);
+        if (starLabel) starLabel.textContent = body.starred ? 'Favoritado' : 'Favoritar';
+        if (starsCountEl) starsCountEl.textContent = String(body.starsCount);
+      }
+    } finally {
+      starToggle.disabled = false;
+    }
+  });
+
+  // Report
+  const reportToggle = document.getElementById('report-toggle');
+  const reportForm = document.getElementById('report-form') as HTMLFormElement | null;
+  const reportCancel = document.getElementById('report-cancel');
+  const reportStatus = document.getElementById('report-status');
+  const reportReasonInput = document.getElementById('report-reason') as HTMLTextAreaElement | null;
+
+  reportToggle?.addEventListener('click', () => reportForm?.toggleAttribute('hidden'));
+  reportCancel?.addEventListener('click', () => {
+    reportForm?.setAttribute('hidden', '');
+    if (reportStatus) {
+      reportStatus.textContent = '';
+      reportStatus.className = 'status';
+    }
+  });
+
+  reportForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!reportStatus || !reportForm) return;
+    const reason = reportReasonInput?.value.trim() ?? '';
+    if (!reason) {
+      reportStatus.textContent = 'Descreva o motivo da denúncia.';
+      reportStatus.className = 'status error';
+      reportReasonInput?.focus();
+      return;
+    }
+    const submitButton = reportForm.querySelector('button[type="submit"]') as HTMLButtonElement | null;
+    if (submitButton) submitButton.disabled = true;
+    reportStatus.textContent = 'Enviando...';
+    reportStatus.className = 'status';
+
+    try {
+      const res = await fetch(`${apiBase}/reports`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason }),
+        credentials: 'include',
+      });
+      if (res.ok) {
+        reportStatus.textContent = 'Denúncia enviada.';
+        reportStatus.className = 'status success';
+        reportForm.setAttribute('hidden', '');
+        return;
+      }
+      const errorBody = await res.json().catch(() => null);
+      reportStatus.textContent = errorBody?.message ?? `Falha ao enviar (${res.status}).`;
+      reportStatus.className = 'status error';
+    } catch {
+      reportStatus.textContent = 'Falha de rede ao enviar.';
+      reportStatus.className = 'status error';
+    } finally {
+      if (submitButton) submitButton.disabled = false;
+    }
+  });
+
+  // Tabs
+  const tabButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('.tab-btn'));
+  const panels = Array.from(document.querySelectorAll<HTMLElement>('.tab-panel'));
+  const loadedTabs = new Set<string>();
+
+  function activateTab(tabName: string) {
+    tabButtons.forEach((b) => b.classList.toggle('active', b.dataset.tab === tabName));
+    panels.forEach((p) => {
+      if (p.dataset.panel === tabName) p.removeAttribute('hidden');
+      else p.setAttribute('hidden', '');
+    });
+    loadTabContent(tabName);
+  }
+  tabButtons.forEach((b) => b.addEventListener('click', () => activateTab(b.dataset.tab ?? '')));
+
+  const HTML_ESCAPES: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+  function escapeHtml(input: string): string {
+    return input.replace(/[&<>"']/g, (ch) => HTML_ESCAPES[ch] ?? ch);
+  }
+
+  async function loadTabContent(tabName: string) {
+    if (loadedTabs.has(tabName)) return;
+    loadedTabs.add(tabName);
+    if (tabName === 'readme') await loadReadme();
+    else if (tabName === 'files') await loadFiles();
+    else if (tabName === 'diff') await loadDiff();
+    else loadedTabs.delete(tabName);
+  }
+
+  async function loadReadme() {
+    const body = document.getElementById('readme-body');
+    if (!body || !latestVersion) return;
+    try {
+      const res = await fetch(`${apiBase}/versions/${latestVersion}/readme`);
+      const data = await res.json();
+      if (data.found) {
+        body.innerHTML = data.html;
+      } else {
+        body.innerHTML = '';
+        const p = document.createElement('p');
+        p.className = 'tab-empty';
+        p.textContent = 'Esse pacote não publicou um README/SKILL.md.';
+        body.appendChild(p);
+      }
+    } catch {
+      body.textContent = 'Falha ao carregar.';
+    }
+  }
+
+  async function loadFiles() {
+    const list = document.getElementById('files-list');
+    const viewer = document.getElementById('file-viewer');
+    if (!list || !viewer || !latestVersion) return;
+    try {
+      const res = await fetch(`${apiBase}/versions/${latestVersion}/files`);
+      const data = await res.json();
+      list.innerHTML = '';
+      if (!data.items.length) {
+        const li = document.createElement('li');
+        li.className = 'tab-empty';
+        li.textContent = 'Nenhum arquivo.';
+        list.appendChild(li);
+        return;
+      }
+      for (const item of data.items) {
+        const li = document.createElement('li');
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = item.path;
+        button.addEventListener('click', async () => {
+          list.querySelectorAll('button').forEach((b) => b.classList.remove('active'));
+          button.classList.add('active');
+          const encodedPath = item.path.split('/').map(encodeURIComponent).join('/');
+          const fileRes = await fetch(`${apiBase}/versions/${latestVersion}/files/${encodedPath}`);
+          const fileData = await fileRes.json();
+          const code = viewer.querySelector('code') ?? document.createElement('code');
+          if (fileData.isBinary) {
+            code.textContent = 'Arquivo binário, não é possível exibir aqui.';
+          } else if (fileData.truncated) {
+            code.textContent = 'Arquivo grande demais pra exibir aqui, baixe o pacote pra ver o conteúdo completo.';
+          } else {
+            code.textContent = fileData.content ?? '';
+          }
+          viewer.innerHTML = '';
+          viewer.appendChild(code);
+        });
+        li.appendChild(button);
+        list.appendChild(li);
+      }
+    } catch {
+      list.innerHTML = '<li class="tab-empty">Falha ao carregar.</li>';
+    }
+  }
+
+  async function loadDiff() {
+    const body = document.getElementById('diff-body');
+    const fromSelect = document.getElementById('diff-from') as HTMLSelectElement | null;
+    const toSelect = document.getElementById('diff-to') as HTMLSelectElement | null;
+    if (!body || !fromSelect || !toSelect) return;
+
+    async function fetchAndRender() {
+      if (!body || !fromSelect || !toSelect) return;
+      body.innerHTML = '<p class="tab-loading">Carregando...</p>';
+      try {
+        const res = await fetch(`${apiBase}/diff?from=${fromSelect.value}&to=${toSelect.value}`);
+        const data = await res.json();
+        body.innerHTML = '';
+        if (!data.files.length) {
+          const p = document.createElement('p');
+          p.className = 'tab-empty';
+          p.textContent = 'Nenhuma diferença entre essas versões.';
+          body.appendChild(p);
+          return;
+        }
+        for (const file of data.files) {
+          const wrap = document.createElement('div');
+          wrap.className = 'diff-file';
+          const header = document.createElement('div');
+          header.className = 'diff-file-header';
+          const statusLabel: Record<string, string> = {
+            added: 'adicionado',
+            removed: 'removido',
+            modified: 'modificado',
+            binary: 'binário, modificado',
+          };
+          header.innerHTML = `<code>${escapeHtml(file.path)}</code><span class="badge">${statusLabel[file.status] ?? file.status}</span>`;
+          wrap.appendChild(header);
+          if (file.status === 'modified' && Array.isArray(file.hunks)) {
+            for (const hunk of file.hunks) {
+              const pre = document.createElement('pre');
+              pre.className = `diff-hunk ${hunk.added ? 'added' : hunk.removed ? 'removed' : ''}`;
+              pre.textContent = hunk.value;
+              wrap.appendChild(pre);
+            }
+          }
+          body.appendChild(wrap);
+        }
+      } catch {
+        body.innerHTML = '<p class="tab-empty">Falha ao carregar.</p>';
+      }
+    }
+
+    fromSelect.addEventListener('change', fetchAndRender);
+    toSelect.addEventListener('change', fetchAndRender);
+    await fetchAndRender();
+  }
+
+  // README já é a aba padrão visível ao carregar a página.
+  loadTabContent('readme');
 </script>

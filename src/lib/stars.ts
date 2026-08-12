@@ -16,3 +16,11 @@ export async function getStarsCount(db: D1Database, packageId: number): Promise<
     .first<{ count: number }>();
   return row?.count ?? 0;
 }
+
+export async function hasStarred(db: D1Database, packageId: number, ownerId: number): Promise<boolean> {
+  const row = await db
+    .prepare('SELECT 1 FROM package_stars WHERE package_id = ? AND owner_id = ?')
+    .bind(packageId, ownerId)
+    .first();
+  return row !== null;
+}

@@ -44,6 +44,22 @@ describe('POST /api/v1/packages/<name>/reports', () => {
     );
     expect(res.status).toBe(401);
   });
+
+  it('aceita denúncia via cookie quando Sec-Fetch-Site é same-origin (botão do site)', async () => {
+    await seedPackage({ ownerHandle: 'reported-owner-3', pkgSlug: 'sketchy-3' });
+    const token = await sessionTokenFor('cookie-reporter');
+    const res = await reportPost(
+      ctx('http://test/api/v1/packages/@reported-owner-3/sketchy-3/reports', {
+        owner: '@reported-owner-3',
+        pkg: 'sketchy-3',
+      }, {
+        method: 'POST',
+        body: JSON.stringify({ reason: 'parece phishing' }),
+        headers: { Cookie: `pepehub_session=${token}`, 'Sec-Fetch-Site': 'same-origin' },
+      }),
+    );
+    expect(res.status).toBe(201);
+  });
 });
 
 describe('estado de moderação controla visibilidade', () => {
