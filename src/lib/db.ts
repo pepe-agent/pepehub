@@ -426,11 +426,20 @@ export async function insertPendingScan(db: D1Database, packageVersionId: number
 export async function updateScanResult(
   db: D1Database,
   scanId: number,
-  params: { status: ScanStatus; riskLevel: ScanRiskLevel | null; findings: unknown; provider: string },
+  params: {
+    status: ScanStatus;
+    riskLevel: ScanRiskLevel | null;
+    findings: unknown;
+    provider: string;
+    // analysisId do provider (ex.: VirusTotal), guardado mesmo quando o
+    // resultado ainda é `pending`, pra retryPendingScans reconsultar depois
+    // sem precisar re-enviar o artefato.
+    providerRef: string | null;
+  },
 ): Promise<void> {
   await db
     .prepare(
-      `UPDATE artifact_scans SET status = ?, risk_level = ?, findings_json = ?, provider = ?, scanned_at = ?
+      `UPDATE artifact_scans SET status = ?, risk_level = ?, findings_json = ?, provider = ?, provider_ref = ?, scanned_at = ?
        WHERE id = ?`,
     )
     .bind(
@@ -438,6 +447,7 @@ export async function updateScanResult(
       params.riskLevel,
       params.findings ? JSON.stringify(params.findings) : null,
       params.provider,
+      params.providerRef,
       now(),
       scanId,
     )
@@ -450,4 +460,16 @@ export async function getLatestScanStatus(db: D1Database, packageVersionId: numb
     .bind(packageVersionId)
     .first<{ status: ScanStatus }>();
   return row?.status ?? null;
+}
+
+// Alimenta o retry do cron (src/worker.ts): toda varredura ainda pending que
+// já tem um analysisId salvo, ou seja, chegou a submeter pro VirusTotal mas
+// não terminou dentro da janela de poll do publish.
+export async function listPendingScansWithProviderRef(
+  db: D1Database,
+): Promise<{ id: number; provider_ref: string }[]> {
+  const result = await db
+    .prepare(`SELECT id, provider_ref FROM artifact_scans WHERE status = 'pending' AND provider_ref IS NOT NULL`)
+    .all<{ id: number; provider_ref: string }>();
+  return result.results ?? [];
 }

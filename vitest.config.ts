@@ -5,6 +5,11 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   plugins: [
     cloudflareTest(async () => ({
+      // wrangler.toml aponta `main` pro entry real (src/worker.ts), que
+      // importa @astrojs/cloudflare/handler, só resolvível dentro do build
+      // Vite do Astro. Sobrescrevendo aqui com um stub pros testes, que
+      // chamam os handlers de rota direto e não passam pelo fetch real.
+      main: './tests/worker-stub.ts',
       wrangler: { configPath: './wrangler.toml' },
       miniflare: {
         bindings: {

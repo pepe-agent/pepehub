@@ -2,6 +2,11 @@ name = "pepehub"
 compatibility_date = "2026-08-01"
 compatibility_flags = ["nodejs_compat"]
 
+# Entry custom só pra expor o scheduled handler do cron abaixo ao lado do
+# fetch normal do Astro (ver src/worker.ts). Sem isso, o adapter usaria seu
+# próprio default (@astrojs/cloudflare/entrypoints/server), que só tem fetch.
+main = "src/worker.ts"
+
 [[d1_databases]]
 binding = "DB"
 database_name = "pepehub"
@@ -43,3 +48,11 @@ namespace_id = "1004"
 [ratelimits.simple]
 limit = 600
 period = 60
+
+# Retry de varreduras VirusTotal presas em pending (src/lib/scanning.ts
+# retryPendingScans, chamado pelo scheduled handler em src/worker.ts).
+# Cron Triggers são gratuitos no plano Free; a cada 15min dá tempo de sobra
+# pra análise do VirusTotal terminar sem bater o limite de invocações do
+# free tier (96 disparos/dia aqui).
+[triggers]
+crons = ["*/15 * * * *"]

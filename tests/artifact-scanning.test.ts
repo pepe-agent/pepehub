@@ -3,7 +3,7 @@ import { createExecutionContext, waitOnExecutionContext } from 'cloudflare:test'
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { GET as downloadGet } from '../src/pages/api/v1/packages/[owner]/[pkg]/versions/[version]/download';
 import { GET as versionsGet, POST as publishPost } from '../src/pages/api/v1/packages/[owner]/[pkg]/versions';
-import { mapVirusTotalStats } from '../src/lib/scanning';
+import { mapVirusTotalStats, retryPendingScans } from '../src/lib/scanning';
 import { publishForm, seedPackage, seedVersion, sessionTokenFor } from './helpers';
 
 function ctx(url: string, params: Record<string, string> = {}, init?: RequestInit) {
@@ -125,6 +125,74 @@ describe('download respeita o veredito da varredura', () => {
       }),
     );
     expect(cleanRes.status).toBe(200);
+  });
+});
+
+describe('retryPendingScans reconsulta análises pendentes sem re-enviar o arquivo', () => {
+  it('resolve uma varredura pending quando a análise já terminou no VirusTotal', async () => {
+    const { packageId } = await seedPackage({ ownerHandle: 'retry-owner', pkgSlug: 'retry-pkg' });
+    await seedVersion({ packageId, version: '1.0.0', r2Key: 'packages/retry-owner/retry-pkg/1.0.0.tgz' });
+    const versionId = (
+      await env.DB.prepare('SELECT id FROM package_versions WHERE package_id = ?').bind(packageId).first<{ id: number }>()
+    )!.id;
+    await env.DB.prepare(
+      `INSERT INTO artifact_scans (package_version_id, status, provider, provider_ref, created_at)
+       VALUES (?, 'pending', 'virustotal', 'analysis-123', datetime('now'))`,
+    )
+      .bind(versionId)
+      .run();
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            data: { attributes: { status: 'completed', stats: { malicious: 0, suspicious: 0, undetected: 60, harmless: 10 } } },
+          }),
+          { status: 200 },
+        ),
+      ),
+    );
+
+    const result = await retryPendingScans(env.DB, 'fake-vt-key');
+    expect(result).toEqual({ checked: 1, resolved: 1 });
+
+    const scan = await env.DB.prepare('SELECT status, risk_level FROM artifact_scans WHERE package_version_id = ?')
+      .bind(versionId)
+      .first<{ status: string; risk_level: string }>();
+    expect(scan).toEqual({ status: 'clean', risk_level: 'low' });
+  });
+
+  it('mantém pending quando a análise ainda não terminou', async () => {
+    const { packageId } = await seedPackage({ ownerHandle: 'retry-wait-owner', pkgSlug: 'retry-wait-pkg' });
+    await seedVersion({ packageId, version: '1.0.0', r2Key: 'packages/retry-wait-owner/retry-wait-pkg/1.0.0.tgz' });
+    const versionId = (
+      await env.DB.prepare('SELECT id FROM package_versions WHERE package_id = ?').bind(packageId).first<{ id: number }>()
+    )!.id;
+    await env.DB.prepare(
+      `INSERT INTO artifact_scans (package_version_id, status, provider, provider_ref, created_at)
+       VALUES (?, 'pending', 'virustotal', 'analysis-456', datetime('now'))`,
+    )
+      .bind(versionId)
+      .run();
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(JSON.stringify({ data: { attributes: { status: 'queued' } } }), { status: 200 })),
+    );
+
+    const result = await retryPendingScans(env.DB, 'fake-vt-key');
+    expect(result).toEqual({ checked: 1, resolved: 0 });
+
+    const scan = await env.DB.prepare('SELECT status FROM artifact_scans WHERE package_version_id = ?')
+      .bind(versionId)
+      .first<{ status: string }>();
+    expect(scan?.status).toBe('pending');
+  });
+
+  it('não faz nada sem VIRUSTOTAL_API_KEY configurada', async () => {
+    const result = await retryPendingScans(env.DB, undefined);
+    expect(result).toEqual({ checked: 0, resolved: 0 });
   });
 });
 
