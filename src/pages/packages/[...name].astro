@@ -1,7 +1,8 @@
 ---
 import { env } from 'cloudflare:workers';
 import PackageDetail from '../../components/PackageDetail.astro';
-import { findOwnerByHandle, findPackageByName, listVersions } from '../../lib/db';
+import RelatedPackages from '../../components/RelatedPackages.astro';
+import { findOwnerByHandle, findPackageByName, findRelatedPackages, listVersions } from '../../lib/db';
 import Base from '../../layouts/Base.astro';
 
 export const prerender = false;
@@ -12,12 +13,14 @@ if (!pkg) {
   return Astro.rewrite('/404');
 }
 
-const [owner, versions] = await Promise.all([
+const [owner, versions, related] = await Promise.all([
   findOwnerByHandle(env.DB, name!.split('/')[0].replace(/^@/, '')),
   listVersions(env.DB, pkg.id),
+  findRelatedPackages(env.DB, { category: pkg.category, kind: 'plugin', excludePackageId: pkg.id, limit: 5 }),
 ]);
 ---
 
 <Base title={pkg.name}>
   <PackageDetail pkg={pkg} ownerHandle={owner?.handle ?? ''} versions={versions} session={Astro.locals.session} />
+  <RelatedPackages items={related} category={pkg.category} kind="plugin" />
 </Base>

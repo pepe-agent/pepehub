@@ -390,6 +390,28 @@ export async function listPackagesForHome(db: D1Database, params: HomeListParams
   return result.results ?? [];
 }
 
+// Pacotes da mesma categoria e do mesmo kind, pra seção "Relacionados" da
+// página de detalhe. Ordena por downloads_count (mesmo sinal de popularidade
+// que o sort "trending" da home já usa), excluindo o próprio pacote.
+export async function findRelatedPackages(
+  db: D1Database,
+  params: { category: string; kind: 'plugin' | 'skill'; excludePackageId: number; limit: number },
+): Promise<SearchResultItem[]> {
+  const result = await db
+    .prepare(
+      `SELECT p.*, o.handle AS owner_handle, ${MODERATION_STATE_COLUMN}, ${STARS_COUNT_COLUMN}, ${INSTALLS_COUNT_COLUMN}
+       FROM packages p
+       JOIN owners o ON o.id = p.owner_id
+       ${MODERATION_JOIN}
+       WHERE ${NOT_HIDDEN_CONDITION} AND p.category = ? AND p.kind = ? AND p.id != ?
+       ORDER BY p.downloads_count DESC, p.created_at DESC
+       LIMIT ?`,
+    )
+    .bind(params.category, params.kind, params.excludePackageId, params.limit)
+    .all<SearchResultItem>();
+  return result.results ?? [];
+}
+
 export async function insertPendingScan(db: D1Database, packageVersionId: number): Promise<ArtifactScanRow> {
   const result = await db
     .prepare(
