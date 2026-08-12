@@ -85,7 +85,7 @@ const versionsWithRequires = versions
       <form id="metadata-form" class="card metadata-form" novalidate hidden>
         <div class="field">
           <label for="metadata-summary">{t.packageDetail.summaryLabel}</label>
-          <textarea id="metadata-summary" name="summary" rows="6">{pkg.summary ?? ''}</textarea>
+          <textarea id="metadata-summary" name="summary" rows="6" placeholder={t.upload.summaryPlaceholder}>{pkg.summary ?? ''}</textarea>
         </div>
         <div class="field">
           <label for="metadata-category">{t.packageDetail.categoryLabel}</label>
