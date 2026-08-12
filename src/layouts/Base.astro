@@ -84,12 +84,12 @@ const returnTo = Astro.url.pathname + Astro.url.search;
       .nav-links a:hover {
         color: var(--text);
       }
-      .nav-links a.back-to-pepe {
+      .nav-links a.pepe-link {
         color: var(--dim);
         padding-right: 22px;
         border-right: 1px solid var(--border);
       }
-      .nav-links a.back-to-pepe:hover {
+      .nav-links a.pepe-link:hover {
         color: var(--muted);
       }
       .auth {
@@ -123,7 +123,7 @@ const returnTo = Astro.url.pathname + Astro.url.search;
           </span>
         </a>
         <nav class="nav-links">
-          <a class="back-to-pepe" href={pepeSiteUrl(locale)}>&larr; {t.nav.backToPepe}</a>
+          <a class="pepe-link" href={pepeSiteUrl(locale)}>{t.nav.pepeLink}</a>
           <a href="/?kind=skill">{t.nav.skills}</a>
           <a href="/?kind=plugin">{t.nav.plugins}</a>
           <a href="/?sort=official">{t.nav.official}</a>
