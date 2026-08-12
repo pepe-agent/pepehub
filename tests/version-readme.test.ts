@@ -60,6 +60,23 @@ describe('GET /api/v1/packages/<name>/versions/<version>/readme', () => {
     expect(body.html).toContain('<h1>Minha skill</h1>');
   });
 
+  it('encontra SKILL.md dentro de uma pasta <nome>/ (skill empacotada)', async () => {
+    const { packageId, name } = await seedPackage({ ownerHandle: 'readme-skill-folder-owner', pkgSlug: 'agent-reach', kind: 'skill' });
+    const zipped = zipSync({
+      'agent-reach/SKILL.md': new TextEncoder().encode('# Agent reach\n\nUse quando precisar.'),
+      'agent-reach/references/web.md': new TextEncoder().encode('# Web\n\nDetalhes.'),
+    });
+    await seedVersion({ packageId, version: '1.0.0', content: zipped, r2Key: `test/${name}/1.0.0.zip` });
+
+    const [owner, pkg] = name.split('/');
+    const res = await readmeGet(ctx(owner, pkg, '1.0.0'));
+    expect(res.status).toBe(200);
+    const body: any = await res.json();
+    expect(body.found).toBe(true);
+    expect(body.sourcePath).toBe('agent-reach/SKILL.md');
+    expect(body.html).toContain('<h1>Agent reach</h1>');
+  });
+
   it('encontra README.md de um plugin quando existe', async () => {
     const { packageId, name } = await seedPackage({ ownerHandle: 'readme-plugin-owner', pkgSlug: 'meu-plugin', kind: 'plugin' });
     const tarGz = buildTarGz([
