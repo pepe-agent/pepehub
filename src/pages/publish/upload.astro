@@ -9,8 +9,8 @@ const session = Astro.locals.session;
 <Base title="Publicar pelo navegador">
   <h1>Publicar pelo navegador</h1>
   <p class="lead">
-    Sem instalar a CLI: envie o arquivo do seu skill ou plugin direto por aqui. Pra automação (CI, releases),
-    use a <a href="/publish">CLI</a> ou um <a href="/publish">publisher confiável</a> em vez disso.
+    Envie o arquivo do seu skill ou plugin diretamente por aqui, sem instalar a CLI. Para automação (CI, releases),
+    utilize a <a href="/publish">CLI</a> ou um <a href="/publish">publisher confiável</a> em vez disso.
   </p>
 
   <h2>Como empacotar</h2>
@@ -48,7 +48,7 @@ const session = Astro.locals.session;
   {
     !session && (
       <div class="card login-prompt">
-        <p>Você precisa estar logado pra publicar.</p>
+        <p>É necessário estar autenticado para publicar.</p>
         <a class="btn btn-primary" href="/login">
           Entrar com GitHub
         </a>
@@ -300,7 +300,7 @@ const session = Astro.locals.session;
       return;
     }
     if (!(artifact instanceof File) || artifact.size === 0) {
-      if (artifactInput) showFieldError(artifactInput, 'Escolha um arquivo pra publicar.');
+      if (artifactInput) showFieldError(artifactInput, 'Escolha um arquivo para publicar.');
       return;
     }
 

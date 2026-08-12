@@ -22,13 +22,13 @@ import Base from '../layouts/Base.astro';
 
   <h2>2. Formato aceito</h2>
   <p>
-    O artefato enviado é um <strong>tarball (<code>.tgz</code>)</strong> pra plugins ou um
-    <strong>zip (<code>.zip</code>)</strong> pra skills, junto de um manifesto JSON com pelo menos
+    O artefato enviado é um <strong>tarball (<code>.tgz</code>)</strong> para plugins ou um
+    <strong>zip (<code>.zip</code>)</strong> para skills, junto de um manifesto JSON com pelo menos
     <code>kind</code>, <code>version</code> (semver) e <code>category</code> (uma das categorias fixas do PepeHub).
   </p>
   <p>
-    O formato completo do manifesto, a estrutura interna do pacote, como declarar comandos, hooks etc., é
-    documentado no site do Pepe, não aqui, pra não duplicar conteúdo:{' '}
+    O formato completo do manifesto, a estrutura interna do pacote e como declarar comandos, hooks etc. estão
+    documentados no site do Pepe, não aqui, para não duplicar conteúdo:{' '}
     <a href={PEPE_SKILLS_DOCS_URL} rel="noopener">skills</a> e
     <a href={PEPE_PLUGINS_DOCS_URL} rel="noopener">plugins</a>.
   </p>
@@ -45,8 +45,9 @@ import Base from '../layouts/Base.astro';
 
   <h2>4. Prefere não usar a CLI?</h2>
   <p>
-    Dá pra publicar direto pelo navegador também, enviando o arquivo (<code>.zip</code> ou <code>.tgz</code>) num
-    formulário: <a href="/publish/upload">publicar pelo navegador</a>.
+    Também é possível publicar diretamente pelo navegador, enviando o arquivo (<code>.zip</code> ou <code
+      >.tgz</code
+    >) em um formulário: <a href="/publish/upload">publicar pelo navegador</a>.
   </p>
 </Base>
 

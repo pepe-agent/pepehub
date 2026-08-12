@@ -20,7 +20,7 @@ export const POST: APIRoute = async ({ params, request }) => {
     return errorResponse(404, 'not_found', `Pacote "${name}" não encontrado.`);
   }
   if (pkg.transfer_pending_to_owner_id !== session.ownerId) {
-    return errorResponse(403, 'forbidden', 'Não há transferência pendente pra você nesse pacote.');
+    return errorResponse(403, 'forbidden', 'Não há transferência pendente para você nesse pacote.');
   }
 
   const slug = pkg.name.split('/').slice(1).join('/');
