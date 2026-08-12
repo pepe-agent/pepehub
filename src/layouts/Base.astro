@@ -2,6 +2,7 @@
 import '../styles/global.css';
 import LanguagePicker from '../components/LanguagePicker.astro';
 import { useTranslations } from '../i18n/utils';
+import { pepeSiteUrl } from '../lib/constants';
 
 interface Props {
   title: string;
@@ -83,6 +84,14 @@ const returnTo = Astro.url.pathname + Astro.url.search;
       .nav-links a:hover {
         color: var(--text);
       }
+      .nav-links a.back-to-pepe {
+        color: var(--dim);
+        padding-right: 22px;
+        border-right: 1px solid var(--border);
+      }
+      .nav-links a.back-to-pepe:hover {
+        color: var(--muted);
+      }
       .auth {
         display: flex;
         align-items: center;
@@ -114,6 +123,7 @@ const returnTo = Astro.url.pathname + Astro.url.search;
           </span>
         </a>
         <nav class="nav-links">
+          <a class="back-to-pepe" href={pepeSiteUrl(locale)}>&larr; {t.nav.backToPepe}</a>
           <a href="/?kind=skill">{t.nav.skills}</a>
           <a href="/?kind=plugin">{t.nav.plugins}</a>
           <a href="/?sort=official">{t.nav.official}</a>

@@ -3,7 +3,16 @@ import type { Locale } from './locales';
 export interface UiDictionary {
   common: { and: string };
   meta: { titleSuffix: string; notFoundTitle: string };
-  nav: { skills: string; plugins: string; official: string; docs: string; publish: string; logout: string; loginWithGithub: string };
+  nav: {
+    backToPepe: string;
+    skills: string;
+    plugins: string;
+    official: string;
+    docs: string;
+    publish: string;
+    logout: string;
+    loginWithGithub: string;
+  };
   home: {
     title: string;
     lead: string;
@@ -166,6 +175,7 @@ export const ui: Record<Locale, UiDictionary> = {
     common: { and: 'e' },
     meta: { titleSuffix: 'PepeHub', notFoundTitle: 'Não encontrado' },
     nav: {
+      backToPepe: 'Voltar pro Pepe',
       skills: 'Skills',
       plugins: 'Plugins',
       official: 'Official',
@@ -331,6 +341,7 @@ export const ui: Record<Locale, UiDictionary> = {
     common: { and: 'e' },
     meta: { titleSuffix: 'PepeHub', notFoundTitle: 'Não encontrado' },
     nav: {
+      backToPepe: 'Voltar ao Pepe',
       skills: 'Skills',
       plugins: 'Plugins',
       official: 'Official',
@@ -496,6 +507,7 @@ export const ui: Record<Locale, UiDictionary> = {
     common: { and: 'y' },
     meta: { titleSuffix: 'PepeHub', notFoundTitle: 'No encontrado' },
     nav: {
+      backToPepe: 'Volver a Pepe',
       skills: 'Skills',
       plugins: 'Plugins',
       official: 'Official',
@@ -661,6 +673,7 @@ export const ui: Record<Locale, UiDictionary> = {
     common: { and: 'and' },
     meta: { titleSuffix: 'PepeHub', notFoundTitle: 'Not found' },
     nav: {
+      backToPepe: 'Back to Pepe',
       skills: 'Skills',
       plugins: 'Plugins',
       official: 'Official',

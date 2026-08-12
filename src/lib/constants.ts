@@ -5,6 +5,21 @@ import { ui } from '../i18n/ui';
 // site do Pepe (ver proposal.md e specs/browse-site/spec.md).
 export const PEPE_SKILLS_DOCS_URL = 'https://pepe-agent.com/pt-br/docs/skills';
 export const PEPE_PLUGINS_DOCS_URL = 'https://pepe-agent.com/pt-br/docs/plugins';
+export const PEPE_SITE_URL = 'https://pepe-agent.com';
+
+// pepe-agent.com prefixa a URL pelo idioma (inclusive o pt-br, que não é
+// "default sem prefixo" lá, diferente do PepeHub que usa cookie); mapeamento
+// direto porque os dois sites compartilham o mesmo conjunto de 4 idiomas.
+const PEPE_SITE_LOCALE_PREFIX: Record<Locale, string> = {
+  'pt-br': 'pt-br',
+  'pt-pt': 'pt-pt',
+  es: 'es',
+  en: 'en',
+};
+
+export function pepeSiteUrl(locale: Locale): string {
+  return `${PEPE_SITE_URL}/${PEPE_SITE_LOCALE_PREFIX[locale]}`;
+}
 
 // Domínio canônico de produção. O redirect_uri do OAuth do GitHub precisa
 // bater exatamente com o que está cadastrado no GitHub OAuth App (só o
