@@ -93,6 +93,21 @@ npm test
    `hub.pepe-agent.com` foi anexado ao Worker via a API de Workers Custom
    Domains (`PUT /accounts/:id/workers/domains`), não pelo dashboard de Pages.
 
+### Deploy automático (CI)
+
+`.github/workflows/deploy.yml` roda `npm test` e, se passar, `npm run build
+&& wrangler deploy` em todo push pro `main`. Migrations de D1 continuam
+manuais (passo 4 acima), de propósito: schema em produção sem revisão humana
+é arriscado demais pra automatizar.
+
+Setup único: crie um API Token na Cloudflare (**My Profile → API Tokens →
+Create Token → template "Edit Cloudflare Workers"**, escopado só pra essa
+conta) e salve como secret do repositório:
+
+```sh
+gh secret set CLOUDFLARE_API_TOKEN --repo pepe-agent/pepehub
+```
+
 ## Marcar um pacote como "oficial"
 
 Curadoria manual na v1: não existe rota pública pra isso. Direto no D1 de
