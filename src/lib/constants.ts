@@ -6,6 +6,12 @@ import { ui } from '../i18n/ui';
 export const PEPE_SKILLS_DOCS_URL = 'https://pepe-agent.com/pt-br/docs/skills';
 export const PEPE_PLUGINS_DOCS_URL = 'https://pepe-agent.com/pt-br/docs/plugins';
 
+// Domínio canônico de produção. O redirect_uri do OAuth do GitHub precisa
+// bater exatamente com o que está cadastrado no GitHub OAuth App (só o
+// domínio custom, nunca o *.workers.dev). Derivar isso de request.url
+// quebra o login pra quem acessa pelo domínio de preview da Cloudflare.
+export const SITE_URL = 'https://hub.pepe-agent.com';
+
 // Rótulos de categoria por idioma vivem no dicionário de i18n (src/i18n/ui.ts)
 // pra não duplicar tradução em dois lugares; essa função só reexpõe como o
 // Record<string, string> que o resto do código já espera.

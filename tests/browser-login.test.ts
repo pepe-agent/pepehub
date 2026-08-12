@@ -29,7 +29,7 @@ describe('GET /login', () => {
     const location = new URL(res.headers.get('Location')!);
     expect(location.origin).toBe('https://github.com');
     expect(location.pathname).toBe('/login/oauth/authorize');
-    expect(location.searchParams.get('redirect_uri')).toBe('http://test/api/v1/auth/github/callback');
+    expect(location.searchParams.get('redirect_uri')).toBe('https://hub.pepe-agent.com/api/v1/auth/github/callback');
     const state = location.searchParams.get('state');
     expect(state).toBeTruthy();
     expect(res.headers.get('Set-Cookie')).toContain(`pepehub_oauth_state=${state}`);

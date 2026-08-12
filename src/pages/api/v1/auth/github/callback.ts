@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { env } from 'cloudflare:workers';
 import { upsertOwner } from '../../../../../lib/db';
+import { SITE_URL } from '../../../../../lib/constants';
 import { exchangeCodeForAccessToken, fetchGithubUser } from '../../../../../lib/github';
 import {
   OAUTH_STATE_COOKIE_NAME,
@@ -33,7 +34,7 @@ export const GET: APIRoute = async ({ request }) => {
     DB: db,
   } = env;
 
-  const redirectUri = new URL('/api/v1/auth/github/callback', request.url).toString();
+  const redirectUri = new URL('/api/v1/auth/github/callback', SITE_URL).toString();
   const accessToken = await exchangeCodeForAccessToken(clientId, clientSecret, code, redirectUri);
   const githubUser = await fetchGithubUser(accessToken);
   const owner = await upsertOwner(db, githubUser.id, githubUser.login.toLowerCase(), githubUser.name);
