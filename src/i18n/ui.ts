@@ -67,6 +67,8 @@ export interface UiDictionary {
     fieldType: string;
     typeSkill: string;
     typePlugin: string;
+    kindLockedHint: string;
+    existingPackageNoteTemplate: string;
     fieldVersion: string;
     versionPlaceholder: string;
     fieldCategory: string;
@@ -235,6 +237,9 @@ export const ui: Record<Locale, UiDictionary> = {
       fieldType: 'Tipo',
       typeSkill: 'Skill (.zip)',
       typePlugin: 'Plugin (.tgz)',
+      kindLockedHint: 'O tipo trava porque esse pacote já existe, o tipo não muda numa atualização.',
+      existingPackageNoteTemplate:
+        'Atualizando pacote existente: {kind}, versão mais recente {version}. Categoria e resumo não são usados numa atualização, só a versão, o changelog e o arquivo.',
       fieldVersion: 'Versão',
       versionPlaceholder: '1.0.0',
       fieldCategory: 'Categoria',
@@ -397,6 +402,9 @@ export const ui: Record<Locale, UiDictionary> = {
       fieldType: 'Tipo',
       typeSkill: 'Skill (.zip)',
       typePlugin: 'Plugin (.tgz)',
+      kindLockedHint: 'O tipo fica bloqueado porque este pacote já existe, o tipo não muda numa atualização.',
+      existingPackageNoteTemplate:
+        'A atualizar pacote existente: {kind}, versão mais recente {version}. Categoria e resumo não são usados numa atualização, só a versão, o changelog e o ficheiro.',
       fieldVersion: 'Versão',
       versionPlaceholder: '1.0.0',
       fieldCategory: 'Categoria',
@@ -559,6 +567,9 @@ export const ui: Record<Locale, UiDictionary> = {
       fieldType: 'Tipo',
       typeSkill: 'Skill (.zip)',
       typePlugin: 'Plugin (.tgz)',
+      kindLockedHint: 'El tipo queda bloqueado porque este paquete ya existe, el tipo no cambia en una actualización.',
+      existingPackageNoteTemplate:
+        'Actualizando paquete existente: {kind}, versión más reciente {version}. Categoría y resumen no se usan en una actualización, solo la versión, el changelog y el archivo.',
       fieldVersion: 'Versión',
       versionPlaceholder: '1.0.0',
       fieldCategory: 'Categoría',
@@ -721,6 +732,9 @@ export const ui: Record<Locale, UiDictionary> = {
       fieldType: 'Type',
       typeSkill: 'Skill (.zip)',
       typePlugin: 'Plugin (.tgz)',
+      kindLockedHint: 'Type is locked because this package already exists, type does not change on an update.',
+      existingPackageNoteTemplate:
+        'Updating existing package: {kind}, latest version {version}. Category and summary are not used on an update, only the version, changelog, and file.',
       fieldVersion: 'Version',
       versionPlaceholder: '1.0.0',
       fieldCategory: 'Category',
