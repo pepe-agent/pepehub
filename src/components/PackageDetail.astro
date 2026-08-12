@@ -52,7 +52,7 @@ const SCAN_CLASSES: Record<string, string> = {
       <form id="metadata-form" class="card metadata-form" novalidate hidden>
         <div class="field">
           <label for="metadata-summary">Resumo</label>
-          <input type="text" id="metadata-summary" name="summary" value={pkg.summary ?? ''} />
+          <textarea id="metadata-summary" name="summary" rows="6">{pkg.summary ?? ''}</textarea>
         </div>
         <div class="field">
           <label for="metadata-category">Categoria</label>
@@ -132,6 +132,7 @@ const SCAN_CLASSES: Record<string, string> = {
   .summary {
     max-width: 60ch;
     color: var(--muted);
+    white-space: pre-wrap;
   }
   .summary:empty {
     display: none;
@@ -158,6 +159,9 @@ const SCAN_CLASSES: Record<string, string> = {
     flex-direction: column;
     gap: 14px;
   }
+  .metadata-form[hidden] {
+    display: none;
+  }
   .metadata-form .field {
     display: flex;
     flex-direction: column;
@@ -169,7 +173,8 @@ const SCAN_CLASSES: Record<string, string> = {
     color: var(--text);
   }
   .metadata-form input,
-  .metadata-form select {
+  .metadata-form select,
+  .metadata-form textarea {
     background: var(--panel-2);
     border: 1px solid var(--border);
     border-radius: 8px;
@@ -178,8 +183,12 @@ const SCAN_CLASSES: Record<string, string> = {
     font-size: 14px;
     padding: 8px 10px;
   }
+  .metadata-form textarea {
+    resize: vertical;
+  }
   .metadata-form .field.field-error input,
-  .metadata-form .field.field-error select {
+  .metadata-form .field.field-error select,
+  .metadata-form .field.field-error textarea {
     border-color: #f87171;
   }
   .metadata-actions {
