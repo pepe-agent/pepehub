@@ -339,7 +339,8 @@ const session = Astro.locals.session;
       if (res.ok) {
         status.textContent = 'Publicado! Redirecionando...';
         status.className = 'status success';
-        window.location.href = `/${owner}/${slug}`;
+        const section = manifest.kind === 'skill' ? 'skills' : 'packages';
+        window.location.href = `/${section}/${owner}/${slug}`;
         return;
       }
 
