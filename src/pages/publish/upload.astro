@@ -1,31 +1,34 @@
 ---
+import { useTranslations } from '../../i18n/utils';
 import { CATEGORIES } from '../../lib/categories';
-import { CATEGORY_LABELS } from '../../lib/constants';
+import { categoryLabels } from '../../lib/constants';
 import Base from '../../layouts/Base.astro';
 
 const session = Astro.locals.session;
+const locale = Astro.locals.locale;
+const t = useTranslations(locale);
+const CATEGORY_LABELS = categoryLabels(locale);
 ---
 
-<Base title="Publicar pelo navegador">
-  <h1>Publicar pelo navegador</h1>
+<Base title={t.upload.title}>
+  <h1>{t.upload.title}</h1>
   <p class="lead">
-    Envie o arquivo do seu skill ou plugin diretamente por aqui, sem instalar a CLI. Para automação (CI, releases),
-    utilize a <a href="/publish">CLI</a> ou um <a href="/publish">publisher confiável</a> em vez disso.
+    {t.upload.lead}
   </p>
 
-  <h2>Como empacotar</h2>
+  <h2>{t.upload.howToPackageTitle}</h2>
   <p class="lead">
-    O conteúdo interno de um skill ou plugin é o mesmo de sempre (documentado no site do Pepe: <a
+    {t.upload.howToPackageLead1} <a
       href="https://pepe-agent.com/pt-br/docs/skills"
-      rel="noopener">skills</a
-    > e <a href="https://pepe-agent.com/pt-br/docs/plugins" rel="noopener">plugins</a>). O que muda aqui é só o
-    empacotamento do arquivo que você envia.
+      rel="noopener">{t.upload.howToPackageSkillsLink}</a
+    > {t.common.and} <a href="https://pepe-agent.com/pt-br/docs/plugins" rel="noopener">{t.upload.howToPackagePluginsLink}</a
+    >{t.upload.howToPackageLead2}
   </p>
 
   <div class="examples">
     <div class="example">
-      <h3>Skill → .zip</h3>
-      <p>Um arquivo Markdown na raiz do zip, nomeado como o pacote:</p>
+      <h3>{t.upload.skillExampleTitle}</h3>
+      <p>{t.upload.skillExampleLead}</p>
       <div class="terminal">
         <div class="bar"><i></i><i></i><i></i></div>
         <pre><code>meu-skill.zip
@@ -34,8 +37,8 @@ const session = Astro.locals.session;
     </div>
 
     <div class="example">
-      <h3>Plugin → .tgz</h3>
-      <p><code>manifest.json</code> na raiz, junto dos arquivos que ele referencia em <code>files</code>:</p>
+      <h3>{t.upload.pluginExampleTitle}</h3>
+      <p>{t.upload.pluginExampleLead}</p>
       <div class="terminal">
         <div class="bar"><i></i><i></i><i></i></div>
         <pre><code>meu-plugin.tgz
@@ -48,9 +51,9 @@ const session = Astro.locals.session;
   {
     !session && (
       <div class="card login-prompt">
-        <p>É necessário estar autenticado para publicar.</p>
+        <p>{t.upload.loginPrompt}</p>
         <a class="btn btn-primary" href="/login">
-          Entrar com GitHub
+          {t.upload.loginButton}
         </a>
       </div>
     )
@@ -59,35 +62,35 @@ const session = Astro.locals.session;
   {
     session && (
       <>
-        <h2>Publicar</h2>
+        <h2>{t.upload.formTitle}</h2>
         <form id="upload-form" class="card" novalidate>
           <div class="field">
-            <label for="slug">Nome do pacote</label>
+            <label for="slug">{t.upload.fieldName}</label>
             <div class="namespaced-input">
               <span class="prefix">@{session.handle}/</span>
-              <input type="text" id="slug" name="slug" placeholder="meu-skill" />
+              <input type="text" id="slug" name="slug" placeholder={t.upload.namePlaceholder} />
             </div>
           </div>
 
           <div class="field">
-            <label>Tipo</label>
+            <label>{t.upload.fieldType}</label>
             <div class="radio-row">
               <label class="radio">
-                <input type="radio" name="kind" value="skill" checked /> Skill (.zip)
+                <input type="radio" name="kind" value="skill" checked /> {t.upload.typeSkill}
               </label>
               <label class="radio">
-                <input type="radio" name="kind" value="plugin" /> Plugin (.tgz)
+                <input type="radio" name="kind" value="plugin" /> {t.upload.typePlugin}
               </label>
             </div>
           </div>
 
           <div class="field-row">
             <div class="field">
-              <label for="version">Versão</label>
-              <input type="text" id="version" name="version" placeholder="1.0.0" />
+              <label for="version">{t.upload.fieldVersion}</label>
+              <input type="text" id="version" name="version" placeholder={t.upload.versionPlaceholder} />
             </div>
             <div class="field">
-              <label for="category">Categoria</label>
+              <label for="category">{t.upload.fieldCategory}</label>
               <select id="category" name="category">
                 {CATEGORIES.map((cat) => (
                   <option value={cat}>{CATEGORY_LABELS[cat] ?? cat}</option>
@@ -97,21 +100,21 @@ const session = Astro.locals.session;
           </div>
 
           <div class="field">
-            <label for="summary">Resumo</label>
-            <textarea id="summary" name="summary" rows="6" placeholder="O que esse pacote faz"></textarea>
+            <label for="summary">{t.upload.fieldSummary}</label>
+            <textarea id="summary" name="summary" rows="6" placeholder={t.upload.summaryPlaceholder}></textarea>
           </div>
 
           <div class="field">
-            <label for="changelog">Changelog desta versão (opcional)</label>
+            <label for="changelog">{t.upload.fieldChangelog}</label>
             <textarea id="changelog" name="changelog" rows="3"></textarea>
           </div>
 
           <div class="field">
-            <label for="artifact">Arquivo</label>
+            <label for="artifact">{t.upload.fieldFile}</label>
             <input type="file" id="artifact" name="artifact" accept=".zip,.tgz,.tar.gz" />
           </div>
 
-          <button type="submit" class="btn btn-primary">Publicar</button>
+          <button type="submit" class="btn btn-primary">{t.upload.submit}</button>
           <p id="upload-status" class="status"></p>
         </form>
       </>
@@ -252,7 +255,22 @@ const session = Astro.locals.session;
   }
 </style>
 
+<script define:vars={{
+  I18N: {
+    errNameFormat: t.upload.errNameFormat,
+    errVersionFormat: t.upload.errVersionFormat,
+    errFileRequired: t.upload.errFileRequired,
+    errFileTypeMismatchTemplate: t.upload.errFileTypeMismatchTemplate,
+    statusPublishing: t.upload.statusPublishing,
+    statusPublished: t.upload.statusPublished,
+    statusNetworkError: t.upload.statusNetworkError,
+  },
+}}>
+  window.__pepehubUploadI18n = I18N;
+</script>
 <script>
+  const I18N = (window as any).__pepehubUploadI18n as Record<string, string>;
+
   const form = document.getElementById('upload-form') as HTMLFormElement | null;
   const status = document.getElementById('upload-status');
   const slugInput = document.getElementById('slug') as HTMLInputElement | null;
@@ -290,15 +308,15 @@ const session = Astro.locals.session;
     const artifact = data.get('artifact');
 
     if (!SLUG_RE.test(slug)) {
-      if (slugInput) showFieldError(slugInput, 'Nome do pacote precisa começar com letra ou número e usar só minúsculas, números e hífen.');
+      if (slugInput) showFieldError(slugInput, I18N.errNameFormat);
       return;
     }
     if (!VERSION_RE.test(version)) {
-      if (versionInput) showFieldError(versionInput, 'Versão precisa ser um semver válido, tipo 1.0.0.');
+      if (versionInput) showFieldError(versionInput, I18N.errVersionFormat);
       return;
     }
     if (!(artifact instanceof File) || artifact.size === 0) {
-      if (artifactInput) showFieldError(artifactInput, 'Escolha um arquivo para publicar.');
+      if (artifactInput) showFieldError(artifactInput, I18N.errFileRequired);
       return;
     }
 
@@ -306,10 +324,11 @@ const session = Astro.locals.session;
     const expectedExt = kind === 'plugin' ? '.tgz' : '.zip';
     if (!artifact.name.toLowerCase().endsWith(expectedExt)) {
       if (artifactInput) {
-        showFieldError(
-          artifactInput,
-          `Tipo "${kind === 'plugin' ? 'Plugin' : 'Skill'}" espera um arquivo ${expectedExt}, mas "${artifact.name}" não é.`,
-        );
+        const message = I18N.errFileTypeMismatchTemplate
+          .replace('{type}', kind === 'plugin' ? 'Plugin' : 'Skill')
+          .replace('{ext}', expectedExt)
+          .replace('{name}', artifact.name);
+        showFieldError(artifactInput, message);
       }
       return;
     }
@@ -329,7 +348,7 @@ const session = Astro.locals.session;
     const prefix = document.querySelector('.namespaced-input .prefix')?.textContent ?? '';
     const owner = prefix.replace('/', '');
 
-    status.textContent = 'Publicando...';
+    status.textContent = I18N.statusPublishing;
     status.className = 'status';
 
     const submitButton = form.querySelector('button[type="submit"]') as HTMLButtonElement | null;
@@ -347,7 +366,7 @@ const session = Astro.locals.session;
       });
 
       if (res.ok) {
-        status.textContent = 'Publicado! Redirecionando...';
+        status.textContent = I18N.statusPublished;
         status.className = 'status success';
         const section = manifest.kind === 'skill' ? 'skills' : 'packages';
         window.location.href = `/${section}/${owner}/${slug}`;
@@ -355,10 +374,10 @@ const session = Astro.locals.session;
       }
 
       const errorBody = await res.json().catch(() => null);
-      status.textContent = errorBody?.message ?? `Falha ao publicar (${res.status}).`;
+      status.textContent = errorBody?.message ?? I18N.statusFailedTemplate.replace('{status}', String(res.status));
       status.className = 'status error';
     } catch {
-      status.textContent = 'Falha de rede ao publicar.';
+      status.textContent = I18N.statusNetworkError;
       status.className = 'status error';
     } finally {
       if (submitButton) submitButton.disabled = false;

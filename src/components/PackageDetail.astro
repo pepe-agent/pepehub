@@ -1,6 +1,7 @@
 ---
+import { useTranslations } from '../i18n/utils';
 import { CATEGORIES } from '../lib/categories';
-import { CATEGORY_LABELS } from '../lib/constants';
+import { categoryLabels } from '../lib/constants';
 import type { PackageRow, PackageVersionRow } from '../lib/db';
 import type { SessionPayload } from '../lib/session';
 import { serializeVersion } from '../lib/serialize';
@@ -14,18 +15,21 @@ interface Props {
   hasStarred: boolean;
 }
 const { pkg, ownerHandle, versions, session, starsCount, hasStarred } = Astro.props;
+const locale = Astro.locals.locale;
+const t = useTranslations(locale);
+const CATEGORY_LABELS = categoryLabels(locale);
 const isOwner = session?.ownerId === pkg.owner_id;
 const latestVersion = versions[0] ?? null;
 const installCmd = `pepe ${pkg.kind} install ${pkg.name}`;
-const readmeTabLabel = pkg.kind === 'skill' ? 'SKILL.md' : 'README';
+const readmeTabLabel = pkg.kind === 'skill' ? t.packageDetail.tabReadmeSkill : t.packageDetail.tabReadmePlugin;
 
 const SCAN_LABELS: Record<string, string> = {
-  pending: 'Verificação pendente',
-  clean: 'Verificado com VirusTotal',
-  review: 'Em revisão',
-  warning: 'Alerta de segurança',
-  malicious: 'Malicioso, download bloqueado',
-  error: 'Verificação indisponível',
+  pending: t.packageDetail.scanPending,
+  clean: t.packageDetail.scanClean,
+  review: t.packageDetail.scanReview,
+  warning: t.packageDetail.scanWarning,
+  malicious: t.packageDetail.scanMalicious,
+  error: t.packageDetail.scanError,
 };
 const SCAN_CLASSES: Record<string, string> = {
   clean: 'scan-clean',
@@ -35,7 +39,7 @@ const SCAN_CLASSES: Record<string, string> = {
 };
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
+  return new Date(iso).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
 const versionsWithRequires = versions
@@ -45,7 +49,7 @@ const versionsWithRequires = versions
 
 <article class="detail">
   <nav class="breadcrumb">
-    <a href={`/?kind=${pkg.kind}`}>{pkg.kind === 'skill' ? 'Skills' : 'Plugins'}</a>
+    <a href={`/?kind=${pkg.kind}`}>{pkg.kind === 'skill' ? t.packageDetail.breadcrumbSkills : t.packageDetail.breadcrumbPlugins}</a>
     <span>/</span>
     <a href={`/?category=${pkg.category}&kind=${pkg.kind}`}>{CATEGORY_LABELS[pkg.category] ?? pkg.category}</a>
     <span>/</span>
@@ -54,17 +58,17 @@ const versionsWithRequires = versions
 
   <header class="detail-header">
     <h1>{pkg.name}</h1>
-    {pkg.official ? <span class="badge official">oficial</span> : null}
+    {pkg.official ? <span class="badge official">{t.card.official}</span> : null}
     {isOwner ? (
       <button type="button" id="edit-toggle" class="edit-toggle">
-        Editar
+        {t.packageDetail.edit}
       </button>
     ) : null}
   </header>
   <p class="meta">
-    <span>por @{ownerHandle}</span>
+    <span>{t.packageDetail.by} @{ownerHandle}</span>
     <span id="category-display" class="badge">{CATEGORY_LABELS[pkg.category] ?? pkg.category}</span>
-    <span>{pkg.downloads_count} downloads</span>
+    <span>{pkg.downloads_count} {t.packageDetail.downloads}</span>
   </p>
   <p id="summary-display" class="summary">{pkg.summary ?? ''}</p>
 
@@ -72,11 +76,11 @@ const versionsWithRequires = versions
     isOwner && (
       <form id="metadata-form" class="card metadata-form" novalidate hidden>
         <div class="field">
-          <label for="metadata-summary">Resumo</label>
+          <label for="metadata-summary">{t.packageDetail.summaryLabel}</label>
           <textarea id="metadata-summary" name="summary" rows="6">{pkg.summary ?? ''}</textarea>
         </div>
         <div class="field">
-          <label for="metadata-category">Categoria</label>
+          <label for="metadata-category">{t.packageDetail.categoryLabel}</label>
           <select id="metadata-category" name="category">
             {CATEGORIES.map((cat) => (
               <option value={cat} selected={cat === pkg.category}>
@@ -86,8 +90,8 @@ const versionsWithRequires = versions
           </select>
         </div>
         <div class="metadata-actions">
-          <button type="submit" class="btn btn-primary">Salvar</button>
-          <button type="button" id="metadata-cancel" class="btn btn-ghost">Cancelar</button>
+          <button type="submit" class="btn btn-primary">{t.packageDetail.save}</button>
+          <button type="button" id="metadata-cancel" class="btn btn-ghost">{t.packageDetail.cancel}</button>
         </div>
         <p id="metadata-status" class="status"></p>
       </form>
@@ -98,20 +102,20 @@ const versionsWithRequires = versions
     <div class="main-col">
       <div class="tabs-nav" role="tablist">
         <button type="button" class="tab-btn active" data-tab="readme">{readmeTabLabel}</button>
-        <button type="button" class="tab-btn" data-tab="files">Files</button>
-        <button type="button" class="tab-btn" data-tab="diff">Diff</button>
-        <button type="button" class="tab-btn" data-tab="versions">Versions</button>
-        <button type="button" class="tab-btn" data-tab="requirements">Requirements</button>
+        <button type="button" class="tab-btn" data-tab="files">{t.packageDetail.tabFiles}</button>
+        <button type="button" class="tab-btn" data-tab="diff">{t.packageDetail.tabDiff}</button>
+        <button type="button" class="tab-btn" data-tab="versions">{t.packageDetail.tabVersions}</button>
+        <button type="button" class="tab-btn" data-tab="requirements">{t.packageDetail.tabRequirements}</button>
       </div>
 
       <div class="tab-panel" data-panel="readme">
         {
           latestVersion ? (
             <div id="readme-body" class="readme-body">
-              <p class="tab-loading">Carregando...</p>
+              <p class="tab-loading">{t.packageDetail.loadingLabel}</p>
             </div>
           ) : (
-            <p class="tab-empty">Nenhuma versão publicada ainda.</p>
+            <p class="tab-empty">{t.packageDetail.noVersionYet}</p>
           )
         }
       </div>
@@ -121,12 +125,12 @@ const versionsWithRequires = versions
           latestVersion ? (
             <div class="files-layout">
               <ul id="files-list" class="files-list">
-                <li class="tab-loading">Carregando...</li>
+                <li class="tab-loading">{t.packageDetail.loadingLabel}</li>
               </ul>
-              <pre id="file-viewer" class="file-viewer"><code>Selecione um arquivo à esquerda.</code></pre>
+              <pre id="file-viewer" class="file-viewer"><code>{t.packageDetail.selectFile}</code></pre>
             </div>
           ) : (
-            <p class="tab-empty">Nenhuma versão publicada ainda.</p>
+            <p class="tab-empty">{t.packageDetail.noVersionYet}</p>
           )
         }
       </div>
@@ -143,7 +147,7 @@ const versionsWithRequires = versions
                     </option>
                   ))}
                 </select>
-                <span class="diff-arrow">para</span>
+                <span class="diff-arrow">{t.packageDetail.diffTo}</span>
                 <select id="diff-to">
                   {versions.map((v, i) => (
                     <option value={v.version} selected={i === 0}>
@@ -153,11 +157,11 @@ const versionsWithRequires = versions
                 </select>
               </div>
               <div id="diff-body" class="diff-body">
-                <p class="tab-loading">Carregando...</p>
+                <p class="tab-loading">{t.packageDetail.loadingLabel}</p>
               </div>
             </>
           ) : (
-            <p class="tab-empty">É preciso pelo menos 2 versões publicadas pra comparar.</p>
+            <p class="tab-empty">{t.packageDetail.needTwoVersions}</p>
           )
         }
       </div>
@@ -165,7 +169,7 @@ const versionsWithRequires = versions
       <div class="tab-panel" data-panel="versions" hidden>
         {
           versions.length === 0 ? (
-            <p class="tab-empty">Nenhuma versão publicada ainda.</p>
+            <p class="tab-empty">{t.packageDetail.noVersionYet}</p>
           ) : (
             <ul class="versions">
               {versions.map((v) => {
@@ -176,7 +180,7 @@ const versionsWithRequires = versions
                     <div class="version-row-header">
                       <strong>{version.version}</strong>
                       <a class="download-link" href={downloadHref}>
-                        Baixar
+                        {t.packageDetail.download}
                       </a>
                     </div>
                     {version.scan ? (
@@ -186,7 +190,7 @@ const versionsWithRequires = versions
                     ) : null}
                     {version.changelog ? <p class="changelog">{version.changelog}</p> : null}
                     <p class="sha256">
-                      sha256: <code>{version.sha256}</code>
+                      {t.packageDetail.sha256Label} <code>{version.sha256}</code>
                     </p>
                   </li>
                 );
@@ -199,7 +203,7 @@ const versionsWithRequires = versions
       <div class="tab-panel" data-panel="requirements" hidden>
         {
           versionsWithRequires.length === 0 ? (
-            <p class="tab-empty">Nenhuma versão declarou requisitos.</p>
+            <p class="tab-empty">{t.packageDetail.noRequirements}</p>
           ) : (
             <ul class="requirements-list">
               {versionsWithRequires.map((v) => (
@@ -218,12 +222,12 @@ const versionsWithRequires = versions
       <div class="card sidebar-card">
         <dl class="sidebar-meta">
           <div class="sidebar-meta-row">
-            <dt>Atualizado</dt>
+            <dt>{t.packageDetail.updated}</dt>
             <dd>{formatDate(pkg.updated_at)}</dd>
           </div>
           {latestVersion && (
             <div class="sidebar-meta-row">
-              <dt>Última versão</dt>
+              <dt>{t.packageDetail.latestVersion}</dt>
               <dd>{latestVersion.version}</dd>
             </div>
           )}
@@ -241,25 +245,25 @@ const versionsWithRequires = versions
             class="btn btn-ghost sidebar-action"
             data-starred={hasStarred ? 'true' : 'false'}
           >
-            <span id="star-label">{hasStarred ? 'Favoritado' : 'Favoritar'}</span> (<span id="stars-count">{starsCount}</span>)
+            <span id="star-label">{hasStarred ? t.packageDetail.starred : t.packageDetail.star}</span> (<span id="stars-count">{starsCount}</span>)
           </button>
         ) : (
           <a class="btn btn-ghost sidebar-action" href="/login">
-            Entrar pra favoritar
+            {t.packageDetail.loginToStar}
           </a>
         )}
 
         {session && (
           <>
             <button type="button" id="report-toggle" class="btn btn-ghost sidebar-action">
-              Reportar
+              {t.packageDetail.report}
             </button>
             <form id="report-form" class="report-form" novalidate hidden>
-              <label for="report-reason">Motivo da denúncia</label>
-              <textarea id="report-reason" name="reason" rows="3" placeholder="Por que está reportando esse pacote?" />
+              <label for="report-reason">{t.packageDetail.reportReasonLabel}</label>
+              <textarea id="report-reason" name="reason" rows="3" placeholder={t.packageDetail.reportReasonPlaceholder} />
               <div class="report-actions">
-                <button type="submit" class="btn btn-primary">Enviar</button>
-                <button type="button" id="report-cancel" class="btn btn-ghost">Cancelar</button>
+                <button type="submit" class="btn btn-primary">{t.packageDetail.reportSend}</button>
+                <button type="button" id="report-cancel" class="btn btn-ghost">{t.packageDetail.reportCancel}</button>
               </div>
               <p id="report-status" class="status"></p>
             </form>
@@ -267,7 +271,7 @@ const versionsWithRequires = versions
         )}
 
         <div class="install-hint">
-          <p class="install-hint-label">Instalar</p>
+          <p class="install-hint-label">{t.packageDetail.installLabel}</p>
           <div class="terminal">
             <div class="bar"><i></i><i></i><i></i></div>
             <pre><code>{installCmd}</code></pre>
@@ -692,13 +696,44 @@ const versionsWithRequires = versions
   }
 </style>
 
-<script define:vars={{ pkgName: pkg.name, latestVersionStr: latestVersion?.version ?? null }}>
+<script
+  define:vars={{
+    pkgName: pkg.name,
+    latestVersionStr: latestVersion?.version ?? null,
+    I18N: {
+      savingStatus: t.packageDetail.savingStatus,
+      savedStatus: t.packageDetail.savedStatus,
+      savingNetworkError: t.packageDetail.savingNetworkError,
+      savingFailedTemplate: t.packageDetail.savingFailedTemplate,
+      star: t.packageDetail.star,
+      starred: t.packageDetail.starred,
+      reportEmptyReason: t.packageDetail.reportEmptyReason,
+      reportSendingStatus: t.packageDetail.reportSendingStatus,
+      reportSent: t.packageDetail.reportSent,
+      reportNetworkError: t.packageDetail.reportNetworkError,
+      reportFailedTemplate: t.packageDetail.reportFailedTemplate,
+      noReadme: t.packageDetail.noReadme,
+      loadFailed: t.packageDetail.loadFailed,
+      noFiles: t.packageDetail.noFiles,
+      binaryFile: t.packageDetail.binaryFile,
+      fileTooLarge: t.packageDetail.fileTooLarge,
+      loadingLabel: t.packageDetail.loadingLabel,
+      noDifference: t.packageDetail.noDifference,
+      diffAdded: t.packageDetail.diffAdded,
+      diffRemoved: t.packageDetail.diffRemoved,
+      diffModified: t.packageDetail.diffModified,
+      diffBinary: t.packageDetail.diffBinary,
+    },
+  }}
+>
   window.__pepehubPkgName = pkgName;
   window.__pepehubLatestVersion = latestVersionStr;
+  window.__pepehubI18n = I18N;
 </script>
 <script>
   const pkgName = (window as any).__pepehubPkgName as string;
   const latestVersion = (window as any).__pepehubLatestVersion as string | null;
+  const I18N = (window as any).__pepehubI18n as Record<string, string>;
   const apiBase = `/api/v1/packages/${pkgName}`;
 
   // Edit form (metadata)
@@ -726,7 +761,7 @@ const versionsWithRequires = versions
     const summary = String(data.get('summary') ?? '').trim();
     const category = String(data.get('category') ?? '');
 
-    metadataStatus.textContent = 'Salvando...';
+    metadataStatus.textContent = I18N.savingStatus;
     metadataStatus.className = 'status';
     const submitButton = metadataForm.querySelector('button[type="submit"]') as HTMLButtonElement | null;
     if (submitButton) submitButton.disabled = true;
@@ -743,16 +778,16 @@ const versionsWithRequires = versions
         if (categoryDisplay && categorySelect) {
           categoryDisplay.textContent = categorySelect.selectedOptions[0]?.textContent ?? category;
         }
-        metadataStatus.textContent = 'Salvo.';
+        metadataStatus.textContent = I18N.savedStatus;
         metadataStatus.className = 'status success';
         metadataForm.setAttribute('hidden', '');
         return;
       }
       const errorBody = await res.json().catch(() => null);
-      metadataStatus.textContent = errorBody?.message ?? `Falha ao salvar (${res.status}).`;
+      metadataStatus.textContent = errorBody?.message ?? I18N.savingFailedTemplate.replace('{status}', String(res.status));
       metadataStatus.className = 'status error';
     } catch {
-      metadataStatus.textContent = 'Falha de rede ao salvar.';
+      metadataStatus.textContent = I18N.savingNetworkError;
       metadataStatus.className = 'status error';
     } finally {
       if (submitButton) submitButton.disabled = false;
@@ -774,7 +809,7 @@ const versionsWithRequires = versions
       if (res.ok) {
         const body = await res.json();
         starToggle.dataset.starred = String(body.starred);
-        if (starLabel) starLabel.textContent = body.starred ? 'Favoritado' : 'Favoritar';
+        if (starLabel) starLabel.textContent = body.starred ? I18N.starred : I18N.star;
         if (starsCountEl) starsCountEl.textContent = String(body.starsCount);
       }
     } finally {
@@ -803,14 +838,14 @@ const versionsWithRequires = versions
     if (!reportStatus || !reportForm) return;
     const reason = reportReasonInput?.value.trim() ?? '';
     if (!reason) {
-      reportStatus.textContent = 'Descreva o motivo da denúncia.';
+      reportStatus.textContent = I18N.reportEmptyReason;
       reportStatus.className = 'status error';
       reportReasonInput?.focus();
       return;
     }
     const submitButton = reportForm.querySelector('button[type="submit"]') as HTMLButtonElement | null;
     if (submitButton) submitButton.disabled = true;
-    reportStatus.textContent = 'Enviando...';
+    reportStatus.textContent = I18N.reportSendingStatus;
     reportStatus.className = 'status';
 
     try {
@@ -821,16 +856,16 @@ const versionsWithRequires = versions
         credentials: 'include',
       });
       if (res.ok) {
-        reportStatus.textContent = 'Denúncia enviada.';
+        reportStatus.textContent = I18N.reportSent;
         reportStatus.className = 'status success';
         reportForm.setAttribute('hidden', '');
         return;
       }
       const errorBody = await res.json().catch(() => null);
-      reportStatus.textContent = errorBody?.message ?? `Falha ao enviar (${res.status}).`;
+      reportStatus.textContent = errorBody?.message ?? I18N.reportFailedTemplate.replace('{status}', String(res.status));
       reportStatus.className = 'status error';
     } catch {
-      reportStatus.textContent = 'Falha de rede ao enviar.';
+      reportStatus.textContent = I18N.reportNetworkError;
       reportStatus.className = 'status error';
     } finally {
       if (submitButton) submitButton.disabled = false;
@@ -878,11 +913,11 @@ const versionsWithRequires = versions
         body.innerHTML = '';
         const p = document.createElement('p');
         p.className = 'tab-empty';
-        p.textContent = 'Esse pacote não publicou um README/SKILL.md.';
+        p.textContent = I18N.noReadme;
         body.appendChild(p);
       }
     } catch {
-      body.textContent = 'Falha ao carregar.';
+      body.textContent = I18N.loadFailed;
     }
   }
 
@@ -897,7 +932,7 @@ const versionsWithRequires = versions
       if (!data.items.length) {
         const li = document.createElement('li');
         li.className = 'tab-empty';
-        li.textContent = 'Nenhum arquivo.';
+        li.textContent = I18N.noFiles;
         list.appendChild(li);
         return;
       }
@@ -914,9 +949,9 @@ const versionsWithRequires = versions
           const fileData = await fileRes.json();
           const code = viewer.querySelector('code') ?? document.createElement('code');
           if (fileData.isBinary) {
-            code.textContent = 'Arquivo binário, não é possível exibir aqui.';
+            code.textContent = I18N.binaryFile;
           } else if (fileData.truncated) {
-            code.textContent = 'Arquivo grande demais pra exibir aqui, baixe o pacote pra ver o conteúdo completo.';
+            code.textContent = I18N.fileTooLarge;
           } else {
             code.textContent = fileData.content ?? '';
           }
@@ -927,7 +962,7 @@ const versionsWithRequires = versions
         list.appendChild(li);
       }
     } catch {
-      list.innerHTML = '<li class="tab-empty">Falha ao carregar.</li>';
+      list.innerHTML = `<li class="tab-empty">${I18N.loadFailed}</li>`;
     }
   }
 
@@ -939,7 +974,7 @@ const versionsWithRequires = versions
 
     async function fetchAndRender() {
       if (!body || !fromSelect || !toSelect) return;
-      body.innerHTML = '<p class="tab-loading">Carregando...</p>';
+      body.innerHTML = `<p class="tab-loading">${I18N.loadingLabel}</p>`;
       try {
         const res = await fetch(`${apiBase}/diff?from=${fromSelect.value}&to=${toSelect.value}`);
         const data = await res.json();
@@ -947,7 +982,7 @@ const versionsWithRequires = versions
         if (!data.files.length) {
           const p = document.createElement('p');
           p.className = 'tab-empty';
-          p.textContent = 'Nenhuma diferença entre essas versões.';
+          p.textContent = I18N.noDifference;
           body.appendChild(p);
           return;
         }
@@ -957,10 +992,10 @@ const versionsWithRequires = versions
           const header = document.createElement('div');
           header.className = 'diff-file-header';
           const statusLabel: Record<string, string> = {
-            added: 'adicionado',
-            removed: 'removido',
-            modified: 'modificado',
-            binary: 'binário, modificado',
+            added: I18N.diffAdded,
+            removed: I18N.diffRemoved,
+            modified: I18N.diffModified,
+            binary: I18N.diffBinary,
           };
           header.innerHTML = `<code>${escapeHtml(file.path)}</code><span class="badge">${statusLabel[file.status] ?? file.status}</span>`;
           wrap.appendChild(header);
@@ -975,7 +1010,7 @@ const versionsWithRequires = versions
           body.appendChild(wrap);
         }
       } catch {
-        body.innerHTML = '<p class="tab-empty">Falha ao carregar.</p>';
+        body.innerHTML = `<p class="tab-empty">${I18N.loadFailed}</p>`;
       }
     }
 

@@ -1,5 +1,6 @@
 ---
-import { CATEGORY_LABELS } from '../lib/constants';
+import { useTranslations } from '../i18n/utils';
+import { categoryLabels } from '../lib/constants';
 import type { SearchResultItem } from '../lib/db';
 
 interface Props {
@@ -8,6 +9,8 @@ interface Props {
   kind: 'plugin' | 'skill';
 }
 const { items, category, kind } = Astro.props;
+const t = useTranslations(Astro.locals.locale);
+const CATEGORY_LABELS = categoryLabels(Astro.locals.locale);
 const kindLabel = kind === 'skill' ? 'skills' : 'plugins';
 const moreHref = `/?category=${category}&kind=${kind}`;
 ---
@@ -15,7 +18,7 @@ const moreHref = `/?category=${category}&kind=${kind}`;
 {
   items.length > 0 && (
     <section class="related">
-      <h2>{kind === 'skill' ? 'Skills relacionadas' : 'Plugins relacionados'}</h2>
+      <h2>{kind === 'skill' ? t.related.skillsHeading : t.related.pluginsHeading}</h2>
       <ul class="related-list">
         {items.map((item) => {
           const href = `/${kindLabel}/${item.name}`;
@@ -83,16 +86,16 @@ const moreHref = `/?category=${category}&kind=${kind}`;
                     <strong>{item.name}</strong>
                     <span class="handle">@{item.owner_handle}</span>
                   </span>
-                  <p class="summary">{item.summary ?? 'Sem resumo.'}</p>
+                  <p class="summary">{item.summary ?? t.related.noSummary}</p>
                 </span>
-                <span class="downloads">{item.downloads_count.toLocaleString('pt-BR')}</span>
+                <span class="downloads">{item.downloads_count.toLocaleString(Astro.locals.locale)}</span>
               </a>
             </li>
           );
         })}
       </ul>
       <a class="btn btn-ghost more-link" href={moreHref}>
-        Mais em {CATEGORY_LABELS[category] ?? category}
+        {t.related.moreIn} {CATEGORY_LABELS[category] ?? category}
       </a>
     </section>
   )

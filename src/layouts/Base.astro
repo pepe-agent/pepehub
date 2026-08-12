@@ -1,20 +1,25 @@
 ---
 import '../styles/global.css';
+import LanguagePicker from '../components/LanguagePicker.astro';
+import { useTranslations } from '../i18n/utils';
 
 interface Props {
   title: string;
 }
 const { title } = Astro.props;
 const session = Astro.locals.session;
+const locale = Astro.locals.locale;
+const t = useTranslations(locale);
+const returnTo = Astro.url.pathname + Astro.url.search;
 ---
 
-<html lang="pt-BR">
+<html lang={locale}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/svg+xml" href="/pepe-icon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <title>{title} | PepeHub</title>
+    <title>{title} | {t.meta.titleSuffix}</title>
     <style>
       .nav {
         position: sticky;
@@ -109,19 +114,20 @@ const session = Astro.locals.session;
           </span>
         </a>
         <nav class="nav-links">
-          <a href="/?kind=skill">Skills</a>
-          <a href="/?kind=plugin">Plugins</a>
-          <a href="/?sort=official">Official</a>
-          <a href="/publish">Docs</a>
-          <a href="/publish/upload">Publicar</a>
+          <a href="/?kind=skill">{t.nav.skills}</a>
+          <a href="/?kind=plugin">{t.nav.plugins}</a>
+          <a href="/?sort=official">{t.nav.official}</a>
+          <a href="/publish">{t.nav.docs}</a>
+          <a href="/publish/upload">{t.nav.publish}</a>
           {session ? (
             <span class="auth">
               <span class="auth-handle">@{session.handle}</span>
-              <a href="/logout">Sair</a>
+              <a href="/logout">{t.nav.logout}</a>
             </span>
           ) : (
-            <a class="auth-login" href="/login">Entrar com GitHub</a>
+            <a class="auth-login" href="/login">{t.nav.loginWithGithub}</a>
           )}
+          <LanguagePicker currentLocale={locale} returnTo={returnTo} />
         </nav>
       </div>
     </header>

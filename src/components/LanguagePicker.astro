@@ -1,0 +1,85 @@
+---
+import { LOCALES, LOCALE_LABELS } from '../i18n/locales';
+
+interface Props {
+  currentLocale: (typeof LOCALES)[number];
+  returnTo: string;
+}
+const { currentLocale, returnTo } = Astro.props;
+const currentCode = currentLocale.toUpperCase();
+---
+
+<details class="lang-picker">
+  <summary>{currentCode}</summary>
+  <ul>
+    {
+      LOCALES.map((locale) => (
+        <li>
+          <a
+            href={`/set-locale?locale=${locale}&redirect=${encodeURIComponent(returnTo)}`}
+            aria-current={locale === currentLocale ? 'true' : undefined}
+          >
+            {LOCALE_LABELS[locale]}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</details>
+
+<style>
+  .lang-picker {
+    position: relative;
+  }
+  .lang-picker summary {
+    list-style: none;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 5px 10px;
+  }
+  .lang-picker summary::-webkit-details-marker {
+    display: none;
+  }
+  .lang-picker summary:hover {
+    color: var(--text);
+    border-color: #3f3f46;
+  }
+  .lang-picker[open] summary {
+    color: var(--text);
+    border-color: var(--accent-soft);
+  }
+  .lang-picker ul {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 6px);
+    margin: 0;
+    padding: 6px;
+    list-style: none;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 20px 50px -20px rgba(0, 0, 0, 0.7);
+    min-width: 170px;
+    z-index: 60;
+  }
+  .lang-picker li a {
+    display: block;
+    padding: 7px 10px;
+    border-radius: 6px;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .lang-picker li a:hover {
+    background: var(--panel-2);
+    color: var(--text);
+  }
+  .lang-picker li a[aria-current='true'] {
+    color: var(--accent-soft);
+    font-weight: 600;
+  }
+</style>

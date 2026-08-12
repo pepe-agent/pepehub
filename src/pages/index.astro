@@ -1,12 +1,23 @@
 ---
 import { env } from 'cloudflare:workers';
 import PackageCard from '../components/PackageCard.astro';
+import { useTranslations } from '../i18n/utils';
 import { CATEGORIES } from '../lib/categories';
-import { CATEGORY_LABELS, HOME_SORT_LABELS } from '../lib/constants';
+import { categoryLabels } from '../lib/constants';
 import { listPackagesForHome, searchPackages, type HomeSort } from '../lib/db';
 import Base from '../layouts/Base.astro';
 
 export const prerender = false;
+
+const locale = Astro.locals.locale;
+const t = useTranslations(locale);
+const CATEGORY_LABELS = categoryLabels(locale);
+const HOME_SORT_LABELS: Record<HomeSort, string> = {
+  trending: t.home.sortTrending,
+  featured: t.home.sortFeatured,
+  official: t.home.sortOfficial,
+  new: t.home.sortNew,
+};
 
 const url = Astro.url;
 const q = url.searchParams.get('q');
@@ -33,23 +44,23 @@ function withParam(name: string, value: string | null) {
 }
 ---
 
-<Base title="Início">
+<Base title={t.home.title}>
   <div class="intro">
-    <h1>Skills e plugins para o Pepe</h1>
-    <p>Busque, navegue por categoria e instale, publicado por qualquer pessoa e autenticado via GitHub.</p>
+    <h1>{t.home.title}</h1>
+    <p>{t.home.lead}</p>
   </div>
 
   <form method="get" action="/" class="search">
-    <input type="search" name="q" placeholder="Buscar pacotes e skills..." value={q ?? ''} />
+    <input type="search" name="q" placeholder={t.home.searchPlaceholder} value={q ?? ''} />
     {kind ? <input type="hidden" name="kind" value={kind} /> : null}
     {category ? <input type="hidden" name="category" value={category} /> : null}
-    <button type="submit" class="btn btn-primary">Buscar</button>
+    <button type="submit" class="btn btn-primary">{t.home.search}</button>
   </form>
 
   <nav class="tabs">
-    <a href={withParam('kind', null)} aria-current={!kind ? 'page' : undefined}>Tudo</a>
-    <a href={withParam('kind', 'skill')} aria-current={kind === 'skill' ? 'page' : undefined}>Skills</a>
-    <a href={withParam('kind', 'plugin')} aria-current={kind === 'plugin' ? 'page' : undefined}>Plugins</a>
+    <a href={withParam('kind', null)} aria-current={!kind ? 'page' : undefined}>{t.home.tabAll}</a>
+    <a href={withParam('kind', 'skill')} aria-current={kind === 'skill' ? 'page' : undefined}>{t.home.tabSkills}</a>
+    <a href={withParam('kind', 'plugin')} aria-current={kind === 'plugin' ? 'page' : undefined}>{t.home.tabPlugins}</a>
   </nav>
 
   {
@@ -66,7 +77,7 @@ function withParam(name: string, value: string | null) {
 
   <nav class="tabs categories">
     <a href={withParam('category', null)} aria-current={!category ? 'page' : undefined}>
-      Todas categorias
+      {t.home.allCategories}
     </a>
     {
       CATEGORIES.map((c) => (
@@ -79,7 +90,7 @@ function withParam(name: string, value: string | null) {
 
   {
     items.length === 0 ? (
-      <p class="empty">Nenhum pacote encontrado.</p>
+      <p class="empty">{t.home.empty}</p>
     ) : (
       <div class="grid">
         {items.map((item) => (

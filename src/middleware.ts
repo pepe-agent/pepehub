@@ -1,5 +1,6 @@
 import type { MiddlewareHandler } from 'astro';
 import { env } from 'cloudflare:workers';
+import { resolveLocale } from './lib/locale';
 import { categoryForMethod, rateLimitConfigFor, rateLimitHeaders } from './lib/rateLimit';
 import { SESSION_COOKIE_NAME, bearerToken, readCookie, verifySessionToken } from './lib/session';
 
@@ -13,7 +14,16 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
     // está desligado pro resto do site).
     const cookieToken = readCookie(request, SESSION_COOKIE_NAME);
     locals.session = cookieToken ? await verifySessionToken(cookieToken, env.SESSION_SECRET) : null;
-    return next();
+    locals.locale = resolveLocale(request);
+
+    const pageResponse = await next();
+    // Sem isso, a Cloudflare cacheia a resposta na borda sem variar por
+    // Accept-Language nem pelo cookie de sessão/idioma, então o primeiro
+    // idioma/sessão detectado numa PoP fica preso pra todo mundo que passa
+    // por ali depois. Toda página aqui é dinâmica por request, nunca deveria
+    // ser cacheada.
+    pageResponse.headers.set('Cache-Control', 'private, no-store');
+    return pageResponse;
   }
 
   locals.session = null;

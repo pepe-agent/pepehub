@@ -27,5 +27,8 @@ declare namespace App {
     // exibir estado de login nas páginas; endpoints /api/v1/* continuam
     // exigindo Bearer token, nunca cookie.
     session: import('./lib/session').SessionPayload | null;
+    // Idioma resolvido em src/middleware.ts: cookie explícito, senão
+    // Accept-Language, senão o default do site. Ver src/lib/locale.ts.
+    locale: import('./i18n/locales').Locale;
   }
 }

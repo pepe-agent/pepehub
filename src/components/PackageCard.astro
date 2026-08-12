@@ -1,24 +1,27 @@
 ---
-import { CATEGORY_LABELS } from '../lib/constants';
+import { useTranslations } from '../i18n/utils';
+import { categoryLabels } from '../lib/constants';
 import type { SearchResultItem } from '../lib/db';
 
 interface Props {
   item: SearchResultItem;
 }
 const { item } = Astro.props;
+const t = useTranslations(Astro.locals.locale);
+const CATEGORY_LABELS = categoryLabels(Astro.locals.locale);
 const detailHref = `/${item.kind === 'skill' ? 'skills' : 'packages'}/${item.name}`;
 ---
 
 <a class="card package-card" href={detailHref}>
   <div class="row">
     <strong class="name">{item.name}</strong>
-    {item.official ? <span class="badge official">oficial</span> : null}
+    {item.official ? <span class="badge official">{t.card.official}</span> : null}
   </div>
-  <p class="summary">{item.summary ?? 'Sem resumo.'}</p>
+  <p class="summary">{item.summary ?? t.card.noSummary}</p>
   <div class="meta">
     <span class="badge">{CATEGORY_LABELS[item.category] ?? item.category}</span>
     <span>@{item.owner_handle}</span>
-    <span>{item.downloads_count} downloads</span>
+    <span>{item.downloads_count} {t.card.downloads}</span>
   </div>
 </a>
 
