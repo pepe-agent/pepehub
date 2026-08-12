@@ -164,6 +164,17 @@ export async function createPackage(
   return result!;
 }
 
+export async function updatePackageMetadata(
+  db: D1Database,
+  packageId: number,
+  params: { summary: string | null; category: string },
+): Promise<void> {
+  await db
+    .prepare('UPDATE packages SET summary = ?, category = ?, updated_at = ? WHERE id = ?')
+    .bind(params.summary, params.category, now(), packageId)
+    .run();
+}
+
 export async function incrementDownloadCount(db: D1Database, packageId: number): Promise<void> {
   await db.prepare('UPDATE packages SET downloads_count = downloads_count + 1 WHERE id = ?').bind(packageId).run();
 }

@@ -19,5 +19,5 @@ const [owner, versions] = await Promise.all([
 ---
 
 <Base title={pkg.name}>
-  <PackageDetail pkg={pkg} ownerHandle={owner?.handle ?? ''} versions={versions} />
+  <PackageDetail pkg={pkg} ownerHandle={owner?.handle ?? ''} versions={versions} session={Astro.locals.session} />
 </Base>

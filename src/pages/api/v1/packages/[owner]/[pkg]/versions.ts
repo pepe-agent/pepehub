@@ -14,7 +14,7 @@ import { errorResponse, json } from '../../../../../../lib/http';
 import { isManifestError, parseManifest } from '../../../../../../lib/manifest';
 import { getReservedName } from '../../../../../../lib/platformAdmin';
 import { enqueueScan } from '../../../../../../lib/scanning';
-import { SESSION_COOKIE_NAME, bearerToken, readCookie, verifySessionToken } from '../../../../../../lib/session';
+import { bearerToken, resolveMutationSession } from '../../../../../../lib/session';
 import { serializeVersion } from '../../../../../../lib/serialize';
 import { checkRepoEligible, fetchArtifactFromRepo } from '../../../../../../lib/sourcePublish';
 import {
@@ -55,27 +55,11 @@ async function resolvePublishIdentity(
   ownerParam: string,
   existingPackage: Awaited<ReturnType<typeof findPackageByName>>,
 ): Promise<{ identity: PublishIdentity } | { error: Response }> {
+  // OIDC (JWT, três segmentos) só chega via Bearer, nunca via cookie do
+  // navegador; checa isso antes de tentar resolveMutationSession (que trata
+  // Bearer opaco de dois segmentos ou o cookie do site como sessão normal).
   const token = bearerToken(request);
-  if (!token) {
-    // Upload pelo formulário do site (sem Bearer): aceita a sessão do
-    // cookie só quando o Fetch Metadata do próprio navegador confirma que a
-    // chamada partiu do nosso site (Sec-Fetch-Site), já que checkOrigin
-    // está desligado globalmente (astro.config.mjs). CLI e OIDC continuam
-    // exigindo Bearer, sem exceção.
-    if (request.headers.get('Sec-Fetch-Site') === 'same-origin') {
-      const cookieToken = readCookie(request, SESSION_COOKIE_NAME);
-      const cookieSession = cookieToken ? await verifySessionToken(cookieToken, sessionSecret) : null;
-      if (cookieSession) {
-        if (!existingPackage && ownerParam.toLowerCase() !== `@${cookieSession.handle.toLowerCase()}`) {
-          return { error: errorResponse(403, 'namespace_mismatch', `Você não pode publicar em "${ownerParam}".`) };
-        }
-        return { identity: { ownerId: cookieSession.ownerId, handle: cookieSession.handle } };
-      }
-    }
-    return { error: errorResponse(401, 'unauthorized', 'Sessão ausente, inválida ou expirada.') };
-  }
-
-  if (token.split('.').length === 3) {
+  if (token && token.split('.').length === 3) {
     if (!existingPackage) {
       return {
         error: errorResponse(
@@ -99,7 +83,7 @@ async function resolvePublishIdentity(
     return { identity: { ownerId: existingPackage.owner_id, handle: owner!.handle } };
   }
 
-  const session = await verifySessionToken(token, sessionSecret);
+  const session = await resolveMutationSession(request, sessionSecret);
   if (!session) {
     return { error: errorResponse(401, 'unauthorized', 'Sessão ausente, inválida ou expirada.') };
   }

@@ -111,3 +111,22 @@ export async function requireSession(
   if (!token) return null;
   return verifySessionToken(token, secret);
 }
+
+// Pra rotas de mutação chamadas tanto pela CLI (Bearer) quanto por um
+// formulário do próprio site (cookie). O cookie só vale quando o
+// Sec-Fetch-Site do navegador confirma 'same-origin', já que checkOrigin
+// está desligado globalmente (astro.config.mjs) e isso é a defesa contra
+// CSRF. Não usar como fallback genérico em toda rota /api/v1/*, só nas que
+// realmente precisam de um formulário no navegador.
+export async function resolveMutationSession(
+  request: Request,
+  secret: string,
+): Promise<SessionPayload | null> {
+  const token = bearerToken(request);
+  if (token) return verifySessionToken(token, secret);
+  if (request.headers.get('Sec-Fetch-Site') === 'same-origin') {
+    const cookieToken = readCookie(request, SESSION_COOKIE_NAME);
+    if (cookieToken) return verifySessionToken(cookieToken, secret);
+  }
+  return null;
+}

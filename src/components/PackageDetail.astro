@@ -1,14 +1,33 @@
 ---
+import { CATEGORIES } from '../lib/categories';
 import { CATEGORY_LABELS } from '../lib/constants';
 import type { PackageRow, PackageVersionRow } from '../lib/db';
+import type { SessionPayload } from '../lib/session';
 import { serializeVersion } from '../lib/serialize';
 
 interface Props {
   pkg: PackageRow;
   ownerHandle: string;
   versions: PackageVersionRow[];
+  session: SessionPayload | null;
 }
-const { pkg, ownerHandle, versions } = Astro.props;
+const { pkg, ownerHandle, versions, session } = Astro.props;
+const isOwner = session?.ownerId === pkg.owner_id;
+
+const SCAN_LABELS: Record<string, string> = {
+  pending: 'Verificação pendente',
+  clean: 'Verificado com VirusTotal',
+  review: 'Em revisão',
+  warning: 'Alerta de segurança',
+  malicious: 'Malicioso, download bloqueado',
+  error: 'Verificação indisponível',
+};
+const SCAN_CLASSES: Record<string, string> = {
+  clean: 'scan-clean',
+  review: 'scan-warning',
+  warning: 'scan-warning',
+  malicious: 'scan-malicious',
+};
 ---
 
 <article>
@@ -18,10 +37,41 @@ const { pkg, ownerHandle, versions } = Astro.props;
   </header>
   <p class="meta">
     <span>por @{ownerHandle}</span>
-    <span class="badge">{CATEGORY_LABELS[pkg.category] ?? pkg.category}</span>
+    <span id="category-display" class="badge">{CATEGORY_LABELS[pkg.category] ?? pkg.category}</span>
     <span>{pkg.downloads_count} downloads</span>
+    {isOwner ? (
+      <button type="button" id="edit-toggle" class="edit-toggle">
+        Editar
+      </button>
+    ) : null}
   </p>
-  {pkg.summary ? <p class="summary">{pkg.summary}</p> : null}
+  <p id="summary-display" class="summary">{pkg.summary ?? ''}</p>
+
+  {
+    isOwner && (
+      <form id="metadata-form" class="card metadata-form" novalidate hidden>
+        <div class="field">
+          <label for="metadata-summary">Resumo</label>
+          <input type="text" id="metadata-summary" name="summary" value={pkg.summary ?? ''} />
+        </div>
+        <div class="field">
+          <label for="metadata-category">Categoria</label>
+          <select id="metadata-category" name="category">
+            {CATEGORIES.map((cat) => (
+              <option value={cat} selected={cat === pkg.category}>
+                {CATEGORY_LABELS[cat] ?? cat}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div class="metadata-actions">
+          <button type="submit" class="btn btn-primary">Salvar</button>
+          <button type="button" id="metadata-cancel" class="btn btn-ghost">Cancelar</button>
+        </div>
+        <p id="metadata-status" class="status"></p>
+      </form>
+    )
+  }
 
   <h2>Versões</h2>
   {
@@ -40,6 +90,11 @@ const { pkg, ownerHandle, versions } = Astro.props;
                   Baixar
                 </a>
               </div>
+              {version.scan ? (
+                <p class={`badge scan-badge ${SCAN_CLASSES[version.scan.status] ?? ''}`}>
+                  {SCAN_LABELS[version.scan.status] ?? version.scan.status}
+                </p>
+              ) : null}
               {version.changelog ? <p class="changelog">{version.changelog}</p> : null}
               {version.requires ? (
                 <p class="requires">
@@ -78,6 +133,70 @@ const { pkg, ownerHandle, versions } = Astro.props;
     max-width: 60ch;
     color: var(--muted);
   }
+  .summary:empty {
+    display: none;
+  }
+  .edit-toggle {
+    margin-left: auto;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.25rem 0.6rem;
+    cursor: pointer;
+  }
+  .edit-toggle:hover {
+    border-color: var(--accent-soft);
+    color: var(--accent-soft);
+  }
+  .metadata-form {
+    max-width: 480px;
+    margin: 0 0 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .metadata-form .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .metadata-form label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .metadata-form input,
+  .metadata-form select {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 14px;
+    padding: 8px 10px;
+  }
+  .metadata-form .field.field-error input,
+  .metadata-form .field.field-error select {
+    border-color: #f87171;
+  }
+  .metadata-actions {
+    display: flex;
+    gap: 10px;
+  }
+  .status {
+    margin: 0;
+    font-size: 13px;
+    min-height: 1.2em;
+  }
+  .status.error {
+    color: #f87171;
+  }
+  .status.success {
+    color: var(--green);
+  }
   h2 {
     font-size: 1.15rem;
     margin: 2rem 0 1rem;
@@ -114,4 +233,89 @@ const { pkg, ownerHandle, versions } = Astro.props;
     font-size: 0.85rem;
     margin: 0.5rem 0 0;
   }
+  .scan-badge {
+    margin: 0.6rem 0 0;
+  }
+  .scan-badge.scan-clean {
+    color: var(--green);
+    border-color: rgba(34, 197, 94, 0.35);
+    background: rgba(34, 197, 94, 0.08);
+  }
+  .scan-badge.scan-warning {
+    color: #fbbf24;
+    border-color: rgba(251, 191, 36, 0.35);
+    background: rgba(251, 191, 36, 0.08);
+  }
+  .scan-badge.scan-malicious {
+    color: #f87171;
+    border-color: rgba(248, 113, 113, 0.35);
+    background: rgba(248, 113, 113, 0.08);
+  }
 </style>
+
+<script>
+  const toggle = document.getElementById('edit-toggle');
+  const form = document.getElementById('metadata-form') as HTMLFormElement | null;
+  const cancelButton = document.getElementById('metadata-cancel');
+  const status = document.getElementById('metadata-status');
+  const summaryDisplay = document.getElementById('summary-display');
+  const categoryDisplay = document.getElementById('category-display');
+  const categorySelect = document.getElementById('metadata-category') as HTMLSelectElement | null;
+
+  toggle?.addEventListener('click', () => {
+    form?.toggleAttribute('hidden');
+  });
+
+  cancelButton?.addEventListener('click', () => {
+    form?.setAttribute('hidden', '');
+    if (status) {
+      status.textContent = '';
+      status.className = 'status';
+    }
+  });
+
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!status || !form) return;
+
+    const data = new FormData(form);
+    const summary = String(data.get('summary') ?? '').trim();
+    const category = String(data.get('category') ?? '');
+    const path = window.location.pathname;
+
+    status.textContent = 'Salvando...';
+    status.className = 'status';
+
+    const submitButton = form.querySelector('button[type="submit"]') as HTMLButtonElement | null;
+    if (submitButton) submitButton.disabled = true;
+
+    try {
+      const res = await fetch(`/api/v1/packages${path.replace(/^\/(packages|skills)/, '')}/metadata`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ summary: summary || null, category }),
+        credentials: 'include',
+      });
+
+      if (res.ok) {
+        if (summaryDisplay) summaryDisplay.textContent = summary;
+        if (categoryDisplay && categorySelect) {
+          categoryDisplay.textContent = categorySelect.selectedOptions[0]?.textContent ?? category;
+        }
+        status.textContent = 'Salvo.';
+        status.className = 'status success';
+        form.setAttribute('hidden', '');
+        return;
+      }
+
+      const errorBody = await res.json().catch(() => null);
+      status.textContent = errorBody?.message ?? `Falha ao salvar (${res.status}).`;
+      status.className = 'status error';
+    } catch {
+      status.textContent = 'Falha de rede ao salvar.';
+      status.className = 'status error';
+    } finally {
+      if (submitButton) submitButton.disabled = false;
+    }
+  });
+</script>
