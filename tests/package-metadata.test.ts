@@ -2,6 +2,7 @@ import { createExecutionContext } from 'cloudflare:test';
 import { describe, expect, it } from 'vitest';
 import { POST as metadataPost } from '../src/pages/api/v1/packages/[owner]/[pkg]/metadata';
 import { POST as publishPost } from '../src/pages/api/v1/packages/[owner]/[pkg]/versions';
+import { MAX_SUMMARY_LENGTH } from '../src/lib/manifest';
 import { publishForm, sessionTokenFor } from './helpers';
 
 function ctx(url: string, params: Record<string, string>, init?: RequestInit) {
@@ -100,6 +101,18 @@ describe('POST /api/v1/packages/<name>/metadata', () => {
     const res = await metadataRequest('@nina', 'metadata-categoria-invalida', { Authorization: `Bearer ${token}` }, {
       summary: 'ok',
       category: 'nao-existe',
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it('recusa summary acima do limite', async () => {
+    const token = await sessionTokenFor('paula');
+    const publishRes = await publish('@paula', 'metadata-summary-longo', token);
+    expect(publishRes.status).toBe(201);
+
+    const res = await metadataRequest('@paula', 'metadata-summary-longo', { Authorization: `Bearer ${token}` }, {
+      summary: 'a'.repeat(MAX_SUMMARY_LENGTH + 1),
+      category: 'tool',
     });
     expect(res.status).toBe(400);
   });

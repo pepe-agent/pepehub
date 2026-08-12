@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isManifestError, parseManifest } from '../src/lib/manifest';
+import { isManifestError, MAX_SUMMARY_LENGTH, parseManifest } from '../src/lib/manifest';
 
 describe('parseManifest', () => {
   it('aceita um manifesto válido e aplica defaults', () => {
@@ -47,6 +47,26 @@ describe('parseManifest', () => {
 
   it('rejeita requires que não é um objeto', () => {
     const result = parseManifest({ kind: 'plugin', version: '1.0.0', category: 'tool', requires: 'nope' });
+    expect(isManifestError(result)).toBe(true);
+  });
+
+  it('aceita summary dentro do limite', () => {
+    const result = parseManifest({
+      kind: 'plugin',
+      version: '1.0.0',
+      category: 'tool',
+      summary: 'a'.repeat(MAX_SUMMARY_LENGTH),
+    });
+    expect(isManifestError(result)).toBe(false);
+  });
+
+  it('rejeita summary acima do limite', () => {
+    const result = parseManifest({
+      kind: 'plugin',
+      version: '1.0.0',
+      category: 'tool',
+      summary: 'a'.repeat(MAX_SUMMARY_LENGTH + 1),
+    });
     expect(isManifestError(result)).toBe(true);
   });
 });

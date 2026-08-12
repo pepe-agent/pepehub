@@ -2,6 +2,7 @@
 import { useTranslations } from '../../i18n/utils';
 import { CATEGORIES } from '../../lib/categories';
 import { categoryLabels } from '../../lib/constants';
+import { MAX_SUMMARY_LENGTH } from '../../lib/manifest';
 import Base from '../../layouts/Base.astro';
 
 const session = Astro.locals.session;
@@ -104,7 +105,8 @@ const CATEGORY_LABELS = categoryLabels(locale);
 
           <div class="field new-package-only">
             <label for="summary">{t.upload.fieldSummary}</label>
-            <textarea id="summary" name="summary" rows="6" placeholder={t.upload.summaryPlaceholder}></textarea>
+            <textarea id="summary" name="summary" rows="6" maxlength={MAX_SUMMARY_LENGTH} placeholder={t.upload.summaryPlaceholder}></textarea>
+            <span id="summary-counter" class="char-counter">0 / {MAX_SUMMARY_LENGTH}</span>
           </div>
 
           <div class="field">
@@ -228,6 +230,14 @@ const CATEGORY_LABELS = categoryLabels(locale);
     font-size: 13px;
     color: var(--dim);
   }
+  .char-counter {
+    align-self: flex-end;
+    font-size: 12px;
+    color: var(--dim);
+  }
+  .char-counter.char-counter-limit {
+    color: #f87171;
+  }
   .existing-note {
     margin: 0;
     padding: 10px 12px;
@@ -273,6 +283,7 @@ const CATEGORY_LABELS = categoryLabels(locale);
 </style>
 
 <script define:vars={{
+  MAX_SUMMARY_LENGTH,
   I18N: {
     errNameFormat: t.upload.errNameFormat,
     errVersionFormat: t.upload.errVersionFormat,
@@ -288,15 +299,27 @@ const CATEGORY_LABELS = categoryLabels(locale);
   },
 }}>
   window.__pepehubUploadI18n = I18N;
+  window.__pepehubMaxSummaryLength = MAX_SUMMARY_LENGTH;
 </script>
 <script>
   const I18N = (window as any).__pepehubUploadI18n as Record<string, string>;
+  const MAX_SUMMARY_LENGTH = (window as any).__pepehubMaxSummaryLength as number;
 
   const form = document.getElementById('upload-form') as HTMLFormElement | null;
   const status = document.getElementById('upload-status');
   const slugInput = document.getElementById('slug') as HTMLInputElement | null;
   const versionInput = document.getElementById('version') as HTMLInputElement | null;
   const artifactInput = document.getElementById('artifact') as HTMLInputElement | null;
+  const summaryInput = document.getElementById('summary') as HTMLTextAreaElement | null;
+  const summaryCounter = document.getElementById('summary-counter');
+
+  function updateSummaryCounter() {
+    if (!summaryInput || !summaryCounter) return;
+    const length = summaryInput.value.length;
+    summaryCounter.textContent = `${length} / ${MAX_SUMMARY_LENGTH}`;
+    summaryCounter.classList.toggle('char-counter-limit', length >= MAX_SUMMARY_LENGTH);
+  }
+  summaryInput?.addEventListener('input', updateSummaryCounter);
   const kindRadios = form?.querySelectorAll<HTMLInputElement>('input[name="kind"]');
   const kindLockedHint = document.getElementById('kind-locked-hint');
   const existingPackageNote = document.getElementById('existing-package-note');

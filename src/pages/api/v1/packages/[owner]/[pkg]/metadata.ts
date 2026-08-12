@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { env } from 'cloudflare:workers';
 import { findPackageByName, updatePackageMetadata } from '../../../../../../lib/db';
 import { isCategory } from '../../../../../../lib/categories';
+import { MAX_SUMMARY_LENGTH } from '../../../../../../lib/manifest';
 import { errorResponse, json } from '../../../../../../lib/http';
 import { resolveMutationSession } from '../../../../../../lib/session';
 
@@ -36,6 +37,9 @@ export const POST: APIRoute = async ({ params, request }) => {
   }
   if (body.summary !== null && typeof body.summary !== 'string') {
     return errorResponse(400, 'invalid_summary', 'summary precisa ser string ou null.');
+  }
+  if (typeof body.summary === 'string' && body.summary.length > MAX_SUMMARY_LENGTH) {
+    return errorResponse(400, 'invalid_summary', `summary não pode ter mais de ${MAX_SUMMARY_LENGTH} caracteres.`);
   }
 
   await updatePackageMetadata(db, pkg.id, { summary: body.summary ?? null, category: body.category });

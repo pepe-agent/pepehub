@@ -1,5 +1,10 @@
 import { isCategory, type Category } from './categories';
 
+// Sem limite, um resumo vira um parágrafo inteiro na listagem e no card do
+// pacote (nenhum dos dois tem line-clamp). 200 caracteres cabe folgado no
+// exemplo real mais longo que já vimos (~113 caracteres, 2 linhas no hero).
+export const MAX_SUMMARY_LENGTH = 200;
+
 export interface PublishSource {
   repo: string;
   ref: string;
@@ -32,6 +37,9 @@ export function parseManifest(raw: unknown): PublishManifest | ManifestValidatio
   }
   if (!isCategory(data.category)) {
     return { field: 'category', message: 'category ausente ou fora da lista fixa' };
+  }
+  if (typeof data.summary === 'string' && data.summary.length > MAX_SUMMARY_LENGTH) {
+    return { field: 'summary', message: `summary não pode ter mais de ${MAX_SUMMARY_LENGTH} caracteres` };
   }
 
   let requiresJson: string | null = null;
