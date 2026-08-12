@@ -430,8 +430,12 @@ const versionsWithRequires = versions
   .tab-panel[hidden] {
     display: none;
   }
-  .tab-loading,
-  .tab-empty {
+  /* :global() nas classes abaixo porque JS cria esses elementos em
+     runtime (document.createElement / innerHTML nas abas Files/Diff);
+     o CSS escopado do Astro só se aplica a elementos que já existiam
+     no HTML renderizado pelo servidor, nunca aos criados depois. */
+  :global(.tab-loading),
+  :global(.tab-empty) {
     color: var(--dim);
     font-size: 0.9rem;
   }
@@ -490,10 +494,10 @@ const versionsWithRequires = versions
     border-radius: var(--radius);
     overflow: hidden;
   }
-  .files-list li + li {
+  .files-list :global(li + li) {
     border-top: 1px solid var(--border);
   }
-  .files-list button {
+  .files-list :global(button) {
     display: block;
     width: 100%;
     text-align: left;
@@ -505,8 +509,8 @@ const versionsWithRequires = versions
     padding: 0.5rem 0.7rem;
     cursor: pointer;
   }
-  .files-list button:hover,
-  .files-list button.active {
+  .files-list :global(button:hover),
+  .files-list :global(button.active) {
     background: var(--panel-2);
     color: var(--text);
   }
@@ -535,10 +539,10 @@ const versionsWithRequires = versions
     color: var(--dim);
     font-size: 0.85rem;
   }
-  .diff-file {
+  :global(.diff-file) {
     margin-bottom: 1rem;
   }
-  .diff-file-header {
+  :global(.diff-file-header) {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -546,18 +550,18 @@ const versionsWithRequires = versions
     font-size: 0.85rem;
     margin-bottom: 0.4rem;
   }
-  .diff-hunk {
+  :global(.diff-hunk) {
     margin: 0;
     padding: 0.35rem 0.7rem;
     font-size: 0.8rem;
     white-space: pre-wrap;
     border-left: 3px solid transparent;
   }
-  .diff-hunk.added {
+  :global(.diff-hunk.added) {
     background: rgba(34, 197, 94, 0.08);
     border-color: var(--green);
   }
-  .diff-hunk.removed {
+  :global(.diff-hunk.removed) {
     background: rgba(248, 113, 113, 0.08);
     border-color: #f87171;
   }
