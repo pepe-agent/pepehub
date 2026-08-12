@@ -326,7 +326,11 @@ const session = Astro.locals.session;
     if (submitButton) submitButton.disabled = true;
 
     try {
-      const res = await fetch(`/api/v1/packages/${encodeURIComponent(owner)}/${encodeURIComponent(slug)}/versions`, {
+      // Sem encodeURIComponent: "@" é válido num path segment sem escapar, e
+      // é assim que a CLI já manda (ver tests/package-publish.test.ts). Um
+      // "%40" escapado aqui não volta a virar "@" do lado do servidor,
+      // quebrando a checagem de namespace.
+      const res = await fetch(`/api/v1/packages/${owner}/${slug}/versions`, {
         method: 'POST',
         body,
         credentials: 'include',
